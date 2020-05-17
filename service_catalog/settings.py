@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -82,9 +83,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'service_catalog',
-        'USER': 'roman',
-        'PASSWORD': 'r0man2001',
-        'HOST': 'localhost',
+        'USER': 'bob_marley',
+        'PASSWORD': '322223af09',
+        'HOST': '63.250.59.170',
         'PORT': '3306',
     }
 }
