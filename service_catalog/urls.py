@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.contrib import admin
 from .api import router
 from app1 import views
-from app1.api_views import StaffView
+from app1.api_views import StaffView, ServiceView
 
 urlpatterns = [
 
@@ -29,4 +29,6 @@ urlpatterns = [
     path(r'api/v1/', include(router.urls)),
 
     path('staff/', StaffView.as_view()),
+
+    path('services/', ServiceView.as_view()),
 ]
