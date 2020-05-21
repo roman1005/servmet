@@ -18,6 +18,7 @@ from django.urls import include, path
 from django.contrib import admin
 from .api import router
 from app1 import views
+from app1.api_views import StaffView
 
 urlpatterns = [
 
@@ -26,4 +27,6 @@ urlpatterns = [
     url(r'^idealweight/',views.IdealWeight),
 
     path(r'api/v1/', include(router.urls)),
+
+    path('staff/', StaffView.as_view()),
 ]

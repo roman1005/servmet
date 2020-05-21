@@ -1,12 +1,24 @@
 from rest_framework import viewsets
+from rest_framework.views import APIView
 from . import models
 from . import serializers
+from .serializers import StaffSerializer
+from rest_framework.response import Response
+from django.contrib.auth.models import Permission
 
-class StaffViewset(viewsets.ModelViewSet):
-    queryset = models.Staff.objects.all()
-    serializer_class = serializers.StaffSerializer
+class StaffView(APIView):
 
-class Service_CI_Viewset(viewsets.ModelViewSet):
-    queryset = models.Service_CI.objects.all()
-    serializer_class = serializers.Service_CI_Serializer
+    def get(self, request):
+        staff = models.Staff.objects.all()
+        # the many param informs the serializer that it will be serializing more than a single article.
+        serializer = StaffSerializer(staff, many=True)
+        for perm in Permission.objects.filter(user=request.user, codename='add_service'):
+            print(perm)
+        response= Response({"staff": serializer.data})
+        return response
+
+
+class ServiceViewset(viewsets.ModelViewSet):
+    queryset = models.Service.objects.all()
+    serializer_class = serializers.ServiceSerializer
 

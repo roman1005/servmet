@@ -38,7 +38,7 @@ class Staff(models.Model):
     def __str__(self):
         return self.name + " " + self.surname
 
-class Service_CI(models.Model):
+class Service(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     design_id = models.IntegerField(default=0, unique=True)
