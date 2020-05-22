@@ -21,13 +21,13 @@ class Customer(models.Model):
     email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return self.name + "" + self.surname
+        return self.name + "" + self.lastname
 
 class Staff(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
+    surname = models.CharField(max_length=100, blank=True)
     lastname = models.CharField(max_length=100)
     phone_number = PhoneField()
     email = models.EmailField(max_length=100)
@@ -36,7 +36,7 @@ class Staff(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.name + " " + self.surname
+        return self.name + " " + self.lastname
 
 class Service(models.Model):
 
@@ -45,8 +45,8 @@ class Service(models.Model):
     service_name = models.CharField(unique=True, max_length=100)
     portfolio = models.CharField(max_length=250)
     sub_portfolio = models.CharField(max_length=250)
-    customer = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='customer')
-    owner = models.ForeignKey(Staff,  on_delete=models.CASCADE, related_name='owner')
+    customer = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='customerID')
+    owner = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='ownerID')
 
     history = HistoricalRecords()
 
