@@ -31,4 +31,6 @@ urlpatterns = [
     path('staff/', StaffView.as_view()),
 
     path('services/', ServiceView.as_view()),
+
+    path('services/int:pk', ServiceView.as_view()),
 ]
