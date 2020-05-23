@@ -45,8 +45,8 @@ class Service(models.Model):
     service_name = models.CharField(unique=True, max_length=100)
     portfolio = models.CharField(max_length=250)
     sub_portfolio = models.CharField(max_length=250)
-    customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID',blank=True, null=True)
-    owner = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='ownerID', blank=True, null=True)
+    customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID')#,blank=True, null=True)
+    owner = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='ownerID')#, blank=True, null=True)
 
     history = HistoricalRecords()
 
