@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Permission, User
 from django.shortcuts import get_object_or_404
+from .models import Staff
+from django.http import JsonResponse
+from rest_framework import status
 
 
 class StaffView(APIView):
