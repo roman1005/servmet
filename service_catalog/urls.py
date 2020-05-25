@@ -32,5 +32,5 @@ urlpatterns = [
 
     path('services/', ServiceView.as_view()),
 
-    path('services/int:pk', ServiceView.as_view()),
+    path('services/<uuid:pk>/',ServiceView.as_view())
 ]

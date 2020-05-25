@@ -9,4 +9,4 @@ class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         exclude = []
-        depth = 1
+        depth= 1

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Permission, User
 from django.shortcuts import get_object_or_404
-from .models import Staff
+from .models import Staff, Service
 from django.http import JsonResponse
 from rest_framework import status
 
@@ -54,7 +54,8 @@ class ServiceView(APIView):
         #service = request.data.get('service')
         # Create an article from the above data
         serializer = ServiceSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+
+        if serializer.is_valid():
             req_owner = Staff.objects.get(pk = request.data['owner'])
             req_customer = Staff.objects.get(pk = request.data['customer'])
             serializer.save(owner = req_owner, customer = req_customer)
@@ -62,6 +63,14 @@ class ServiceView(APIView):
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        user = User.objects.get(username=request.user)
+        if not user.has_perm('app1.delete_service'):
+            raise PermissionDenied()
+        service = Service.objects.get(pk=pk)
+        service.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ServiceViewset(viewsets.ModelViewSet):
     queryset = models.Service.objects.all()
