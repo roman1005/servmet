@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Permission, User
 from django.shortcuts import get_object_or_404
-from .models import Staff
+from .models import Staff, Service
 from django.http import JsonResponse
 from rest_framework import status
 
@@ -62,6 +62,24 @@ class ServiceView(APIView):
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk):
+
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.add_service'):
+            raise PermissionDenied()
+
+        saved_article = get_object_or_404(Service.objects.all(), id=pk)
+        data = request.data.get('service')
+        serializer = ServiceSerializer(instance=saved_article, data=data, partial=True)
+
+        if serializer.is_valid(raise_exception=True):
+            service_saved = serializer.save()
+        return Response({
+            "success": "Service '{}' updated successfully".format(service_saved.service_name)
+        })
+
 
 class ServiceViewset(viewsets.ModelViewSet):
     queryset = models.Service.objects.all()
