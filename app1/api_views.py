@@ -54,8 +54,7 @@ class ServiceView(APIView):
         #service = request.data.get('service')
         # Create an article from the above data
         serializer = ServiceSerializer(data=request.data)
-
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             req_owner = Staff.objects.get(pk = request.data['owner'])
             req_customer = Staff.objects.get(pk = request.data['customer'])
             serializer.save(owner = req_owner, customer = req_customer)
@@ -71,6 +70,24 @@ class ServiceView(APIView):
         service = Service.objects.get(pk=pk)
         service.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def put(self, request, pk):
+
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.add_service'):
+            raise PermissionDenied()
+
+        saved_article = get_object_or_404(Service.objects.all(), id=pk)
+        data = request.data.get('service')
+        serializer = ServiceSerializer(instance=saved_article, data=data, partial=True)
+
+        if serializer.is_valid(raise_exception=True):
+            service_saved = serializer.save()
+        return Response({
+            "success": "Service '{}' updated successfully".format(service_saved.service_name)
+        })
+
 
 class ServiceViewset(viewsets.ModelViewSet):
     queryset = models.Service.objects.all()
