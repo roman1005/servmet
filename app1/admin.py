@@ -17,11 +17,11 @@ class InlineChangeList(object):
         self.params = dict(request.GET.items())
 
 
-class MetricInline(admin.TabularInline):
+class MetricInline(admin.StackedInline):
     per_page = 1
-    template = 'admin/edit_inline/tabular_paginator.html'
+    template = 'admin/edit_inline/stacked.html'
     model = Metric
-    fields = ['metric_name',]
+    fields = ['metric_name']
     extra = 0
     can_delete = False
 
