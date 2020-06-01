@@ -1,6 +1,10 @@
 <div class="a">
     <p>
-     HELLO WORKD
+     HELLO WORlD
     </p>
 
 </div>
+{% with "http://127.0.0.1:8000/admin/app1/service/FirstString"|add:metric_id as varname %}
+                  <a href={{varname}}>{{ field.contents }}</a>
+                  {% endwith %}
+59

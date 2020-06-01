@@ -87,7 +87,7 @@ class Metric(models.Model):
     def __str__(self):
         return self.metric_name
 
-class Measurement(models.Model):
+class MetricMeasurement(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
@@ -96,7 +96,7 @@ class Measurement(models.Model):
 
     history = HistoricalRecords()
 
-class Value(models.Model):
+class MetricValue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
     date_begin = models.DateTimeField()
