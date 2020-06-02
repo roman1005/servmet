@@ -18,17 +18,22 @@ class LinkedInline(admin.options.InlineModelAdmin):
 class MetricInline(LinkedInline):
     model = Metric
     extra = 0
-    fields = [ "metric_name"] # etc
+    fields = [ "metric_name"]
 
 
 class ServiceAdmin(admin.ModelAdmin):
     inlines = [
         MetricInline,
     ]
-    search_fields = ('service_name',)
+    search_fields = ('service_name', 'design_id')
+    ordering = ('service_name',)
+
+class StaffAdmin(admin.ModelAdmin):
+    ordering = ('name',)
+    search_fields = ('name',)
 
 admin.site.register(Service, ServiceAdmin)
-admin.site.register(Staff, SimpleHistoryAdmin)
+admin.site.register(Staff, StaffAdmin)
 admin.site.register(Metric, SimpleHistoryAdmin)
 admin.site.register(MetricMeasurement, SimpleHistoryAdmin)
 admin.site.register(MetricValue, SimpleHistoryAdmin)
