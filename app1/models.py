@@ -63,11 +63,11 @@ class Service(models.Model):
     customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID',blank=True, null=True)
     owner = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='ownerID', blank=True, null=True)
     status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
-    totalorder = models.CharField( max_length=100, blank=True, null=True)
+    totalorder = models.CharField( max_length=100, blank=True, null=True, verbose_name="Total order")
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.service_name
+        return self.service_name + " { " + self.portfolio + " -> " + self.sub_portfolio + " }"
 
 class Metric(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
