@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.contrib import admin
 from .api import router
 from app1 import views
-from app1.api_views import StaffView, ServiceView
+from app1.api_views import StaffView, ServiceView, MetricView
 
 urlpatterns = [
 
@@ -30,7 +30,9 @@ urlpatterns = [
 
     path('staff/', StaffView.as_view()),
 
-    path('services/', ServiceView.as_view()),
+    path('api/services/', ServiceView.as_view()),
 
-    path('services/<uuid:pk>/',ServiceView.as_view())
+    path('api/services/<uuid:pk>/', ServiceView.as_view()),
+
+    path('api/metrics/', MetricView.as_view())
 ]

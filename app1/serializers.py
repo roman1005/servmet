@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from app1.models import Service, Staff
+from app1.models import Service, Staff, Metric
 
 class StaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
@@ -20,3 +20,10 @@ class ServiceSerializer(serializers.ModelSerializer):
         instance.owner = validated_data.get('owner', instance.owner)
         instance.save()
         return instance
+
+
+class MetricSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Metric
+        exclude = []
+        depth = 2

@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from . import models
 from . import serializers
-from .serializers import StaffSerializer,ServiceSerializer
+from .serializers import StaffSerializer,ServiceSerializer, MetricSerializer
 from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Permission, User
@@ -89,7 +89,44 @@ class ServiceView(APIView):
         })
 
 
+class MetricView(APIView):
+
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.view_metric'):
+            raise PermissionDenied()
+
+        metric = models.Metric.objects.all()
+        # the many param informs the serializer that it will be serializing more than a single article.
+        serializer = MetricSerializer(metric, many=True)
+
+        response = Response({"metrics": serializer.data})
+        return response
+
+    def post(self, request):
+
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.add_metric'):
+            raise PermissionDenied()
+
+        #service = request.data.get('service')
+        # Create an article from the above data
+        serializer = MetricSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            req_service = Service.objects.get(pk = request.data['service'])
+            serializer.save(service = req_service)
+
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class ServiceViewset(viewsets.ModelViewSet):
     queryset = models.Service.objects.all()
     serializer_class = serializers.ServiceSerializer
+
+
 
