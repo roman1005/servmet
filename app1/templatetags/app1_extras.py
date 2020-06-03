@@ -6,7 +6,6 @@ register = template.Library()
 
 @register.simple_tag
 def get_link(object, request):
-    print(socket.gethostname())
     if type(object) is Metric:
         return request.build_absolute_uri('/admin/app1/metric/') + str(object.id) + "/change"
     elif type(object) is MetricValue:
