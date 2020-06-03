@@ -9,7 +9,7 @@ def get_link(object, request):
     if type(object) is Metric:
         return request.build_absolute_uri('/admin/app1/metric/') + str(object.id) + "/change"
     elif type(object) is MetricValue:
-        return request.build_absolute_uri('/admin/app1/metric/') + str(object.id) + "/change"
+        return request.build_absolute_uri('/admin/app1/metricvalue/') + str(object.id) + "/change"
 
 
 '''
