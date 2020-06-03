@@ -114,6 +114,9 @@ class ServiceAdmin(admin.ModelAdmin):
     ordering = ('totalorder',)
     exclude = ['totalorder',]
 
+    def __unicode__(self):
+        return self.totalorder
+
 
 class StaffAdmin(admin.ModelAdmin):
     ordering = ('name',)
@@ -123,7 +126,7 @@ class StaffAdmin(admin.ModelAdmin):
         return self.name
 
 class MetricAdmin(admin.ModelAdmin):
-    ordering = ('metric_name',)
+    ordering = ('service__totalorder', 'metric_order', )
     search_fields = ('metric_name',)
     inlines = [
         MetricValueInline
