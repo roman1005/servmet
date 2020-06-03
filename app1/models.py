@@ -98,12 +98,19 @@ class MetricMeasurement(models.Model):
     history = HistoricalRecords()
 
 class MetricValue(models.Model):
+
+    class Meta:
+        verbose_name = "Metric value"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
+    value = models.IntegerField(verbose_name="Metric value", default=-1)
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
 
     history = HistoricalRecords()
 
+    def __str__(self):
+        return "Period from " + str(self.date_begin) + " to " + str(self.date_end) + " (Value: " + str(self.value) + ")"
 
 

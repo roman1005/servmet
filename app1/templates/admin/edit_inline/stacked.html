@@ -1,25 +1,99 @@
-{% load i18n admin_urls static %}
-<div class="js-inline-admin-formset inline-group"
-     id="{{ inline_admin_formset.formset.prefix }}-group"
-     data-inline-type="stacked"
+{% load i18n admin_urls static admin_modify %}
+{% load app1_extras %}
+<div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-type="tabular"
      data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
-<fieldset class="module {{ inline_admin_formset.classes }}">
-  <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+  <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
 {{ inline_admin_formset.formset.management_form }}
-{{ inline_admin_formset.formset.non_form_errors }}
+<fieldset class="module {{ inline_admin_formset.classes }}">
+   <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+   {{ inline_admin_formset.formset.non_form_errors }}
+   <table>
+     <thead><tr>
+       <th class="original"></th>
 
-{% for inline_admin_form in inline_admin_formset %}<div class="inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
-  <h3><b>{{ inline_admin_formset.opts.verbose_name|capfirst }}:</b> <span class="inline_label">{% if inline_admin_form.original %}{{ inline_admin_form.original }}{% if inline_admin_form.model_admin.show_change_link and inline_admin_form.model_admin.has_registered_model %} <a href="{% url inline_admin_form.model_admin.opts|admin_urlname:'change' inline_admin_form.original.pk|admin_urlquote %}" class="{% if inline_admin_formset.has_change_permission %}inlinechangelink{% else %}inlineviewlink{% endif %}">{% if inline_admin_formset.has_change_permission %}{% trans "Change" %}{% else %}{% trans "View" %}{% endif %}</a>{% endif %}
-{% else %}#{{ forloop.counter }}{% endif %}</span>
-      {% if inline_admin_form.show_url %}<a href="{{ inline_admin_form.absolute_url }}">{% trans "View on site" %}</a>{% endif %}
-    {% if inline_admin_formset.formset.can_delete and inline_admin_formset.has_delete_permission and inline_admin_form.original %}<span class="delete">{{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}</span>{% endif %}
-  </h3>
-  {% if inline_admin_form.form.non_field_errors %}{{ inline_admin_form.form.non_field_errors }}{% endif %}
-  {% for fieldset in inline_admin_form %}
-    {% include "admin/includes/fieldset.html" %}
-  {% endfor %}
-  {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
-  {% if inline_admin_form.fk_field %}{{ inline_admin_form.fk_field.field }}{% endif %}
-</div>{% endfor %}
+     <tbody>
+     {% for inline_admin_form in inline_admin_formset %}
+        {% if inline_admin_form.form.non_field_errors %}
+        <tr><td colspan="{{ inline_admin_form|cell_count }}">{{ inline_admin_form.form.non_field_errors }}</td></tr>
+        {% endif %}
+        <tr class="form-row {% cycle "row1" "row2" %} {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}"
+             id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+        <td class="original">
+          {% if inline_admin_form.original or inline_admin_form.show_url %}<a href={% get_link inline_admin_form.original %}>{{ inline_admin_form.original }}</a>{% endif %}
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+   <style>
+    .dark {
+      /*background-color: #417690;*/
+      background-color: #FFFFFF;
+      border: none;
+      color: #666;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    .light {
+      background-color: #008CBA;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+
+  </style>
+   <div>
+   {% with inline_admin_formset.formset.page as page_obj %}
+    <p class="paginator">
+      {% if page_obj.previous_page_number > 1 %}
+        <a href="?page={{ page_obj.previous_page_number|add:'-1' }}">{% trans 'previous' %}</a>
+      {% endif %}
+
+      {% if page_obj.number|add:"-5" > 0 %}
+        <a href="?page=0">1</a>
+      {% endif %}
+
+      {% if page_obj.number|add:"-5" > 1 %}
+        <span>&hellip;</span>
+      {% endif %}
+
+      {% for page_num in page_obj.paginator.page_range %}
+        {% if page_obj.number == page_num %}
+          <span class="dark">{{ page_num|add:"-1" }}</span>
+        {% else %}
+          {% if page_num > page_obj.number|add:"-5" and page_num < page_obj.number|add:"5" %}
+            <a class="light" style="color:white" href="?page={{ page_num|add:'-1' }}">{{ page_num|add:"-1" }}</a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.number|add:"5" < page_obj.paginator.num_pages %}
+        <span>&hellip;</span>
+      {% endif %}
+
+      {% if page_obj.number|add:"4" < page_obj.paginator.num_pages %}
+        <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+      {% endif %}
+
+      {% if page_obj.next_page_number < page_obj.paginator.num_pages|add:'1' %}
+        <a href="?page={{ page_obj.next_page_number|add:'-1' }}">{% trans 'next' %}</a>
+      {% endif %}
+      <span class='dark'>{{ page_obj.paginator.count }} Queries</span>
+    </p>
+  {% endwith %}
+  </div>
 </fieldset>
+  </div>
 </div>

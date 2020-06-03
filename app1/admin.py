@@ -1,18 +1,25 @@
 from django.contrib import admin
 from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue
 from simple_history.admin import SimpleHistoryAdmin
+from django.contrib.admin.views.main import ChangeList
+from django.core.paginator import EmptyPage, InvalidPage, Paginator
+
+
+class InlineChangeList(object):
+    can_show_all = True
+    multi_page = True
+    get_query_string = ChangeList.__dict__['get_query_string']
+
+    def __init__(self, request, page_num, paginator):
+        self.show_all = 'all' in request.GET
+        self.page_num = page_num
+        self.paginator = paginator
+        self.result_count = paginator.count
+        self.params = dict(request.GET.items())
 
 
 class LinkedInline(admin.options.InlineModelAdmin):
-    template = "admin/edit_inline/inline_metrics.html"
-    #admin_model_path = None
-
-    '''
-    def __init__(self, *args):
-        super(LinkedInline, self).__init__(*args)
-        if self.admin_model_path is None:
-            self.admin_model_path = self.model.__name__.lower()
-    '''
+    template = "admin/edit_inline/stacked.html"
 
 
 class MetricInline(LinkedInline):
@@ -20,13 +27,81 @@ class MetricInline(LinkedInline):
     extra = 0
     fields = ["metric_name"]
     ordering = ('metric_order',)
+    per_page = 10
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super(MetricInline, self).get_formset(
+            request, obj, **kwargs)
+
+        class PaginationFormSet(formset_class):
+            def __init__(self, *args, **kwargs):
+                super(PaginationFormSet, self).__init__(*args, **kwargs)
+
+                qs = self.queryset
+                paginator = Paginator(qs, self.per_page)
+                try:
+                    page_num = int(request.GET.get('page', ['0'])[0])
+                except ValueError:
+                    page_num = 0
+
+                try:
+                    page = paginator.page(page_num + 1)
+                except (EmptyPage, InvalidPage):
+                    page = paginator.page(paginator.num_pages)
+
+                self.page = page
+                self.cl = InlineChangeList(request, page_num, paginator)
+                self.paginator = paginator
+
+                if self.cl.show_all:
+                    self._queryset = qs
+                else:
+                    self._queryset = page.object_list
+
+        PaginationFormSet.per_page = self.per_page
+        return PaginationFormSet
+
 
 class MetricValueInline(LinkedInline):
+
+    template = 'admin/edit_inline/inline_metrics.html'
+    template = "admin/edit_inline/stacked.html"
     model = MetricValue
     extra = 0
-    fields = ['id']
-    readonly_fields = ['id']
+    per_page = 10
     ordering = ('-date_begin',)
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super(MetricValueInline, self).get_formset(
+            request, obj, **kwargs)
+
+        class PaginationFormSet(formset_class):
+            def __init__(self, *args, **kwargs):
+                super(PaginationFormSet, self).__init__(*args, **kwargs)
+
+                qs = self.queryset
+                paginator = Paginator(qs, self.per_page)
+                try:
+                    page_num = int(request.GET.get('page', ['0'])[0])
+                except ValueError:
+                    page_num = 0
+
+                try:
+                    page = paginator.page(page_num + 1)
+                except (EmptyPage, InvalidPage):
+                    page = paginator.page(paginator.num_pages)
+
+                self.page = page
+                self.cl = InlineChangeList(request, page_num, paginator)
+                self.paginator = paginator
+
+                if self.cl.show_all:
+                    self._queryset = qs
+                else:
+                    self._queryset = page.object_list
+
+        PaginationFormSet.per_page = self.per_page
+        return PaginationFormSet
 
 #class MetricMeasurementInLine()
 
