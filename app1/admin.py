@@ -27,7 +27,7 @@ class MetricInline(LinkedInline):
     extra = 0
     fields = ["metric_name"]
     ordering = ('metric_order',)
-    per_page = 10
+    per_page = 2
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricInline, self).get_formset(

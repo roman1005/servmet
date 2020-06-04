@@ -3,32 +3,35 @@
 <div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
      data-inline-type="tabular"
      data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
-  <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
-{{ inline_admin_formset.formset.management_form }}
+
 <fieldset class="module {{ inline_admin_formset.classes }}">
    <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
    {{ inline_admin_formset.formset.non_form_errors }}
    <table>
-     <thead><tr>
-       <th class="original"></th>
-
      <tbody>
      {% for inline_admin_form in inline_admin_formset %}
-        {% if inline_admin_form.form.non_field_errors %}
-        <tr><td colspan="{{ inline_admin_form|cell_count }}">{{ inline_admin_form.form.non_field_errors }}</td></tr>
-        {% endif %}
-        <tr class="form-row {% cycle "row1" "row2" %} {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}"
-             id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
-        <td class="original">
+       <td class="original">
           {% if inline_admin_form.original or inline_admin_form.show_url %}
               <h4><a href={% get_link inline_admin_form.original request%}>{{ inline_admin_form.original }}</a></h4>
           {% endif %}
         </td>
+
         </tr>
+
      {% endfor %}
+
      </tbody>
    </table>
-   <style>
+    {% define "" as stop_loop %}
+    {% for inline_admin_form in inline_admin_formset|slice:":1" %}
+        {% if stop_loop %}{% else %}
+            {% if inline_admin_form.original %}
+            <h4><a href={% add_another_link inline_admin_form.original request%}>{% add_another_text inline_admin_form.original %}</a></h4>
+            {% define "true" as stop_loop %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    <style>
     .dark {
       /*background-color: #417690;*/
       background-color: #FFFFFF;
@@ -58,6 +61,7 @@
   </style>
    <div>
    {% with inline_admin_formset.formset.page as page_obj %}
+   {% if page_obj.paginator.count %}
     <p class="paginator">
       {% if page_obj.previous_page_number > 1 %}
         <a href="?page={{ page_obj.previous_page_number|add:'-1' }}">{% trans 'previous' %}</a>
@@ -94,6 +98,7 @@
       {% endif %}
       <span class='dark'>{{ page_obj.paginator.count }} Queries</span>
     </p>
+    {% endif %}
   {% endwith %}
   </div>
 </fieldset>
