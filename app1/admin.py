@@ -24,6 +24,7 @@ class MetricInline(admin.TabularInline):
     model = Metric
     extra = 0
     per_page = 3
+    ordering = ('metric_order',)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricInline, self).get_formset(
@@ -63,6 +64,7 @@ class MetricValueInline(admin.TabularInline):
     model = MetricValue
     extra = 0
     per_page = 3
+    ordering = ('-date_begin',)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricValueInline, self).get_formset(
