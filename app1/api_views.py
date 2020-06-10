@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
-from .models import Staff, Service, Metric
+from .models import Staff, Service, Metric, MetricValue
 from django.http import JsonResponse
 from rest_framework import status
 
@@ -142,6 +142,7 @@ class MetricValueView(APIView):
 
         if not user.has_perm('app1.add_metricvalue'):
             raise PermissionDenied()
+
 
         serializer = MetricValueSerializer(data=request.data)
 

@@ -5,6 +5,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 
 
+
 class InlineChangeList(object):
     can_show_all = True
     multi_page = True
@@ -18,16 +19,11 @@ class InlineChangeList(object):
         self.params = dict(request.GET.items())
 
 
-class LinkedInline(admin.options.InlineModelAdmin):
-    template = "admin/edit_inline/stacked.html"
-
-
-class MetricInline(LinkedInline):
+class MetricInline(admin.TabularInline):
+    template = "admin/edit_inline/stacked.html/"
     model = Metric
     extra = 0
-    fields = ["metric_name"]
-    ordering = ('metric_order',)
-    per_page = 2
+    per_page = 3
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricInline, self).get_formset(
@@ -62,14 +58,11 @@ class MetricInline(LinkedInline):
         return PaginationFormSet
 
 
-class MetricValueInline(LinkedInline):
-
-    template = 'admin/edit_inline/inline_metrics.html'
-    template = "admin/edit_inline/stacked.html"
+class MetricValueInline(admin.TabularInline):
+    template = "admin/edit_inline/stacked.html/"
     model = MetricValue
     extra = 0
-    per_page = 10
-    ordering = ('-date_begin',)
+    per_page = 3
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricValueInline, self).get_formset(

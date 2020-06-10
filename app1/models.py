@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 import uuid
 from phone_field import PhoneField
 from simple_history.models import HistoricalRecords
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 
 STATUS_CHOICES = (
     ('DEF', 'Defined'),
@@ -110,7 +112,23 @@ class MetricValue(models.Model):
 
     history = HistoricalRecords()
 
+    def save(self, *args, **kwargs):
+        # get number of items that have an overlapping start date
+        metric_value_overlapping_start = MetricValue.objects.filter(date_begin__gte=self.date_begin,
+                                                                          date_begin__lte=self.date_end).count()
+
+        # get number of items that have an overlapping end date
+        metric_value_overlapping_end = MetricValue.objects.filter(date_end__gte=self.date_begin,
+                                                                        date_end__lte=self.date_end).count()
+
+        overlapping_metric_value_present = metric_value_overlapping_start > 0 or metric_value_overlapping_end > 0
+
+        if overlapping_metric_value_present:
+            print("Trying to overlap metric value")
+        else:
+            super(MetricValue, self).save(*args, **kwargs)  # Call the "real" save() method.
+
     def __str__(self):
-        return "Period from " + str(self.date_begin) + " to " + str(self.date_end) + " (Value: " + str(self.value) + ")"
+        return "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
 
 
