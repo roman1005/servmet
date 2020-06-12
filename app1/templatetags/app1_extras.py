@@ -5,12 +5,28 @@ from app1.models import Metric, MetricValue
 register = template.Library()
 
 @register.simple_tag
+def get_metric_link(original, request):
+    return request.build_absolute_uri('/admin/app1/metric/') + str(original.metric_id) + "/change"
+
+@register.simple_tag
 def get_link(object, request):
     if type(object) is Metric:
         return request.build_absolute_uri('/admin/app1/metric/') + str(object.id) + "/change"
     elif type(object) is MetricValue:
         return request.build_absolute_uri('/admin/app1/metricvalue/') + str(object.id) + "/change"
 
+@register.simple_tag
+def get_service_link(original, request):
+  id = original.service_id
+  return request.build_absolute_uri('/admin/app1/service/') + str(id) + "/change"
+
+@register.simple_tag
+def get_admin_link(request):
+    return request.build_absolute_uri('/admin/')
+'''
+@register.simple_tag
+def define(val=None):
+  return val
 
 @register.simple_tag
 def add_another_link(object, request):
@@ -18,7 +34,7 @@ def add_another_link(object, request):
         return request.build_absolute_uri('/admin/app1/metric/add')
     elif type(object) is MetricValue:
         return request.build_absolute_uri('/admin/app1/metricvalue/add')
-
+        
 @register.simple_tag
 def add_another_text(object):
     if type(object) is Metric:
@@ -29,8 +45,6 @@ def add_another_text(object):
 @register.simple_tag
 def get_obj(objects):
     return objects[0].original
+'''
 
-@register.simple_tag
-def define(val=None):
-  return val
 

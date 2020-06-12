@@ -3,8 +3,6 @@ from django.contrib.auth.models import User
 import uuid
 from phone_field import PhoneField
 from simple_history.models import HistoricalRecords
-from django.contrib import messages
-from django.http import HttpResponseRedirect
 
 STATUS_CHOICES = (
     ('DEF', 'Defined'),
@@ -76,8 +74,8 @@ class Metric(models.Model):
     service = models.ForeignKey(Service, on_delete=models.PROTECT)
     metric_name = models.CharField(max_length=100)
     description = models.TextField()
-    date_begin = models.DateTimeField()
-    date_end = models.DateTimeField()
+    date_begin = models.DateTimeField(auto_now=True, null=True)
+    date_end = models.DateTimeField(auto_now=True, null=True)
     status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
     metric_order = models.IntegerField()
     nature = models.CharField(max_length=300)
@@ -125,6 +123,8 @@ class MetricValue(models.Model):
 
         if overlapping_metric_value_present:
             print("Trying to overlap metric value")
+            #metric = Metric.objects.get(metric_name = self.metric)
+            #return redirect('http://127.0.0.1:8000/admin/app1/metric/6b6ad711-f536-42dd-b4d2-000c98dda3e6/change/')
         else:
             super(MetricValue, self).save(*args, **kwargs)  # Call the "real" save() method.
 
