@@ -43,51 +43,16 @@ class MetricInline(LinkedInline):
     fields = ["metric_name"]
     readonly_fields = ["metric_name"]
     ordering = ('metric_order',)
-    per_page = 2
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def get_formset(self, request, obj=None, **kwargs):
-        formset_class = super(MetricInline, self).get_formset(
-            request, obj, **kwargs)
-
-        class PaginationFormSet(formset_class):
-            def __init__(self, *args, **kwargs):
-                super(PaginationFormSet, self).__init__(*args, **kwargs)
-
-                qs = self.queryset
-                paginator = Paginator(qs, self.per_page)
-                try:
-                    page_num = int(request.GET.get('page', ['0'])[0])
-                except ValueError:
-                    page_num = 0
-
-                try:
-                    page = paginator.page(page_num + 1)
-                except (EmptyPage, InvalidPage):
-                    page = paginator.page(paginator.num_pages)
-
-                self.page = page
-                self.cl = InlineChangeList(request, page_num, paginator)
-                self.paginator = paginator
-
-                if self.cl.show_all:
-                    self._queryset = qs
-                else:
-                    self._queryset = page.object_list
-
-        PaginationFormSet.per_page = self.per_page
-        return PaginationFormSet
+    max_num = 0
 
 
 class MetricValueInline(admin.TabularInline):
     template = "admin/edit_inline/metrics.html/"
     model = MetricValue
     extra = 0
-    per_page = 3
+    per_page = 12
     ordering = ('-date_begin',)
-    readonly_fields = ['metric', 'value', 'date_begin', 'date_end']
+    #readonly_fields = ['metric', 'value', 'date_begin', 'date_end']
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricValueInline, self).get_formset(

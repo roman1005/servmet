@@ -88,6 +88,7 @@ class Metric(models.Model):
     def __str__(self):
         return self.metric_name
 
+
 class MetricMeasurement(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -129,6 +130,8 @@ class MetricValue(models.Model):
             super(MetricValue, self).save(*args, **kwargs)  # Call the "real" save() method.
 
     def __str__(self):
-        return "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
+        service_id = Metric.objects.get(id=self.metric_id).service_id
+        design_id = Service.objects.get(id=service_id).design_id
+        return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
 
 

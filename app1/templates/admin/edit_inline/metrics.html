@@ -132,7 +132,6 @@
       {% if page_obj.next_page_number < page_obj.paginator.num_pages|add:'1' %}
         <a href="?page={{ page_obj.next_page_number|add:'-1' }}">{% trans 'next' %}</a>
       {% endif %}
-      <span class='dark'>{{ page_obj.paginator.count }} Queries</span>
     </p>
   {% endwith %}
   </div>
