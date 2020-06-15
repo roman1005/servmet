@@ -60,7 +60,9 @@
 {% endblock %}
 
 {% block after_related_objects %}
-    <a href = {% get_metric_link original request%}>Go to metric</a>
+    {% if original %}
+        <a href = {% get_metric_link original request%}>Go to metric</a>
+    {% endif %}
     <p></p>
 {% endblock %}
 
@@ -81,5 +83,6 @@
 
 </div>
 </form></div>
+
     <a href={% get_admin_link request %}> Go to admin </a>
 {% endblock %}

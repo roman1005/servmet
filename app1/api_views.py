@@ -10,6 +10,8 @@ from django.shortcuts import get_object_or_404
 from .models import Staff, Service, Metric, MetricValue
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.exceptions import APIException
+
 
 
 class StaffView(APIView):
@@ -52,14 +54,27 @@ class ServiceView(APIView):
             raise PermissionDenied()
 
         #service = request.data.get('service')
-        # Create an article from the above data
         serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            req_owner = Staff.objects.get(pk = request.data['owner'])
-            req_customer = Staff.objects.get(pk = request.data['customer'])
-            serializer.save(owner = req_owner, customer = req_customer)
+            to_post = True
+            try:
+                req_owner = Staff.objects.get(pk=request.data['owner'])
+            except KeyError:
+                to_post = False
+                return JsonResponse({"owner": ["This field is required."]})
 
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                req_customer = Staff.objects.get(pk=request.data['customer'])
+                return JsonResponse({"customer": ["This field is required."]})
+
+            except KeyError:
+                to_post = False
+                return JsonResponse({"customer": ["This field is required."]})
+
+            if to_post:
+
+                serializer.save(owner=req_owner, customer=req_customer)
+                return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -114,13 +129,22 @@ class MetricView(APIView):
         serializer = MetricSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
-            req_service = Service.objects.get(pk = request.data['service'])
-            serializer.save(service = req_service)
 
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                req_service = Service.objects.get(pk=request.data['service'])
+                serializer.save(metric=req_service)
+
+                return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+
+            except KeyError:
+                return JsonResponse({"service": ["This field is required."]})
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ServiceUnavailable(APIException):
+    status_code = 503
+    default_detail = 'Service temporarily unavailable, try again later.'
+    default_code = 'service_unavailable'
 
 class MetricValueView(APIView):
 
@@ -147,10 +171,16 @@ class MetricValueView(APIView):
         serializer = MetricValueSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
-            req_metric = Metric.objects.get(pk = request.data['metric'])
-            serializer.save(metric = req_metric)
 
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                req_metric = Metric.objects.get(pk = request.data['metric'])
+                serializer.save(metric = req_metric)
+
+                return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+
+            except KeyError:
+                return JsonResponse({"metric": ["This field is required."]})
+
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

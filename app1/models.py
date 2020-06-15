@@ -103,7 +103,7 @@ class MetricValue(models.Model):
         verbose_name = "Metric value"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
+    metric= models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=-False)
     value = models.IntegerField(verbose_name="Metric value", default=-1)
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
