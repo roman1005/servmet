@@ -11,8 +11,7 @@ from .models import Staff, Service, Metric, MetricValue
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.exceptions import APIException
-
-
+from django.core.exceptions import ObjectDoesNotExist
 
 class StaffView(APIView):
 
@@ -57,18 +56,22 @@ class ServiceView(APIView):
         serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             to_post = True
+
             try:
                 req_owner = Staff.objects.get(pk=request.data['owner'])
             except KeyError:
                 to_post = False
                 return JsonResponse({"owner": ["This field is required."]})
+            except ObjectDoesNotExist:
+                return JsonResponse({"owner": ["Owner with such id does not exist."]})
 
             try:
                 req_customer = Staff.objects.get(pk=request.data['customer'])
-
             except KeyError:
                 to_post = False
                 return JsonResponse({"customer": ["This field is required."]})
+            except ObjectDoesNotExist:
+                return JsonResponse({"customer": ["Customer with such id does not exist."]})
 
             if to_post:
 
@@ -138,6 +141,9 @@ class MetricView(APIView):
             except KeyError:
                 return JsonResponse({"service": ["This field is required."]})
 
+            except ObjectDoesNotExist:
+                return JsonResponse({"service": ["Service with such id does not exist."]})
+
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ServiceUnavailable(APIException):
@@ -174,12 +180,21 @@ class MetricValueView(APIView):
             try:
                 #later when unique change filter for get
                 req_metric = Metric.objects.filter(mtrc_design_id=request.data['mtrc_design_id'])[0]
+                #req_metric = Metric.objects.get(mtrc_design_id=request.data['mtrc_design_id'])
                 serializer.save(metric = req_metric)
 
                 return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
             except KeyError:
                 return JsonResponse({"mtrc_design_id": ["This field is required."]})
+
+            #later change IndexError for ObjectDoesNotExist
+            except IndexError:
+                return JsonResponse({"mtrc_design_id": ["Metric with such mtrc_design_id does not exist."]})
+            '''
+            except ObjectDoesNotExist:
+                return JsonResponse({"mtrc_design_id": ["Metric with such mtrc_design_id does not exist."]})
+            '''
 
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
