@@ -132,8 +132,7 @@ class MetricValue(models.Model):
     '''
 
     def __str__(self):
-        service_id = Metric.objects.get(id=self.metric_id).service_id
-        design_id = Service.objects.get(id=service_id).design_id
+        design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
 
 
