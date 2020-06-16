@@ -71,7 +71,7 @@ class Service(models.Model):
 
 class Metric(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    mtrc_design_id = models.IntegerField(default=0)
+    design_id = models.IntegerField(default=0)
     service = models.ForeignKey(Service, on_delete=models.PROTECT)
     metric_name = models.CharField(max_length=100)
     description = models.TextField()

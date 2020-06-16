@@ -179,21 +179,22 @@ class MetricValueView(APIView):
 
             try:
                 #later when unique change filter for get
-                req_metric = Metric.objects.filter(mtrc_design_id=request.data['mtrc_design_id'])[0]
-                #req_metric = Metric.objects.get(mtrc_design_id=request.data['mtrc_design_id'])
+                req_metric = Metric.objects.filter(design_id=request.data['design_id'])[0]
+                req_metric = Metric.objects.filter(design_id=request.data['design_id'])[0]
+                #req_metric = Metric.objects.get(design_id=request.data['design_id'])
                 serializer.save(metric = req_metric)
 
                 return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
             except KeyError:
-                return JsonResponse({"mtrc_design_id": ["This field is required."]})
+                return JsonResponse({"design_id": ["This field is required."]})
 
             #later change IndexError for ObjectDoesNotExist
             except IndexError:
-                return JsonResponse({"mtrc_design_id": ["Metric with such mtrc_design_id does not exist."]})
+                return JsonResponse({"design_id": ["Metric with such design_id does not exist."]})
             '''
             except ObjectDoesNotExist:
-                return JsonResponse({"mtrc_design_id": ["Metric with such mtrc_design_id does not exist."]})
+                return JsonResponse({"design_id": ["Metric with such design_id does not exist."]})
             '''
 
 
