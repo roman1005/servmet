@@ -65,7 +65,6 @@ class ServiceView(APIView):
 
             try:
                 req_customer = Staff.objects.get(pk=request.data['customer'])
-                return JsonResponse({"customer": ["This field is required."]})
 
             except KeyError:
                 to_post = False
