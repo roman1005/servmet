@@ -172,13 +172,14 @@ class MetricValueView(APIView):
         if serializer.is_valid(raise_exception=True):
 
             try:
-                req_metric = Metric.objects.get(pk = request.data['metric'])
+                #later when unique change filter for get
+                req_metric = Metric.objects.filter(mtrc_design_id=request.data['mtrc_design_id'])[0]
                 serializer.save(metric = req_metric)
 
                 return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
             except KeyError:
-                return JsonResponse({"metric": ["This field is required."]})
+                return JsonResponse({"mtrc_design_id": ["This field is required."]})
 
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

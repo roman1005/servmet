@@ -71,6 +71,7 @@ class Service(models.Model):
 
 class Metric(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mtrc_design_id = models.IntegerField(default=0)
     service = models.ForeignKey(Service, on_delete=models.PROTECT)
     metric_name = models.CharField(max_length=100)
     description = models.TextField()
@@ -110,7 +111,7 @@ class MetricValue(models.Model):
     date_end = models.DateTimeField()
 
     history = HistoricalRecords()
-
+    '''
     def save(self, *args, **kwargs):
         # get number of items that have an overlapping start date
         metric_value_overlapping_start = MetricValue.objects.filter(date_begin__gte=self.date_begin,
@@ -128,6 +129,7 @@ class MetricValue(models.Model):
             #return redirect('http://127.0.0.1:8000/admin/app1/metric/6b6ad711-f536-42dd-b4d2-000c98dda3e6/change/')
         else:
             super(MetricValue, self).save(*args, **kwargs)  # Call the "real" save() method.
+    '''
 
     def __str__(self):
         service_id = Metric.objects.get(id=self.metric_id).service_id
