@@ -172,32 +172,23 @@ class MetricValueView(APIView):
         if not user.has_perm('app1.add_metricvalue'):
             raise PermissionDenied()
 
-
         serializer = MetricValueSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
 
             try:
-                #later when unique change filter for get
-                req_metric = Metric.objects.filter(design_id=request.data['design_id'])[0]
-                req_metric = Metric.objects.filter(design_id=request.data['design_id'])[0]
-                #req_metric = Metric.objects.get(design_id=request.data['design_id'])
+                req_metric = Metric.objects.get(design_id=request.data['design_id'])
                 serializer.save(metric = req_metric)
-
                 return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
             except KeyError:
                 return JsonResponse({"design_id": ["This field is required."]})
 
-            #later change IndexError for ObjectDoesNotExist
-            except IndexError:
-                return JsonResponse({"design_id": ["Metric with such design_id does not exist."]})
-            '''
             except ObjectDoesNotExist:
                 return JsonResponse({"design_id": ["Metric with such design_id does not exist."]})
-            '''
 
-
+            except ValueError:
+                return JsonResponse({'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -6,7 +6,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.shortcuts import redirect
 from django.contrib.admin.templatetags import admin_modify
-
+from django.core.exceptions import ValidationError
 
 class RemoveButtons:
 
@@ -125,12 +125,60 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
     def response_change(self, request, obj):
         return redirect(request.path)
 
+    def save_model(self, request, obj, form, change):
+        return
+
+    def save_formset(self, request, form, formset, change):
+
+        if len(formset.forms) <= len(formset.initial_forms):
+            return formset.save()
+
+        new_forms = self.get_new(formset.initial_forms, formset.forms)
+        for form in new_forms:
+            answer = self.check_overlapping(form.instance)
+            if answer == 0:
+                raise ValidationError('Date begin or date end field overlaps with other metric values.')
+            elif answer == 1:
+                raise ValidationError('Date begin cannot be later than date end.')
+            else:
+                return formset.save()
+
+    def get_new(self, initial_forms, forms):
+
+        new_forms = []
+        for mval in forms:
+            if mval not in initial_forms:
+                new_forms.append(mval)
+        return new_forms
+
+    def check_overlapping(self, obj):
+        metric_value_overlapping_start = MetricValue.objects.filter(date_begin__gte=obj.date_begin,
+                                                                    date_begin__lte=obj.date_end).count()
+
+        # get number of items that have an overlapping end date
+        metric_value_overlapping_end = MetricValue.objects.filter(date_end__gte=obj.date_begin,
+                                                                  date_end__lte=obj.date_end).count()
+
+        overlapping_metric_value_present = metric_value_overlapping_start > 0 or metric_value_overlapping_end > 0
+
+        if overlapping_metric_value_present:
+            # print("Trying to overlap metric value")
+            return 0 #ValidationError('Date begin or date end field overlaps with other metric values.')
+        elif obj.date_begin > obj.date_end:
+            return 1 #ValidationError('Date begin cannot be later than date end.')
+        else:
+            return 2
+
+
 class MetricValueAdmin(admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/metric_values.html/"
 
     def response_change(self, request, obj):
         return redirect(request.path)
+
+    def save_model(self, request, obj, form, change):
+        return
 
 
 admin.site.register(Service, ServiceAdmin)

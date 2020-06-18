@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 import uuid
 from phone_field import PhoneField
 from simple_history.models import HistoricalRecords
+from django.core.exceptions import ValidationError
 
 STATUS_CHOICES = (
     ('DEF', 'Defined'),
@@ -21,24 +22,6 @@ STATUS_CHOICES = (
     ('NA', 'Not agreed'),
 )
 
-class Owner(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
-    lastname = models.CharField(max_length=100)
-    phone_number = PhoneField()
-    email = models.EmailField(max_length=100)
-
-class Customer(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
-    lastname = models.CharField(max_length=100)
-    phone_number = PhoneField()
-    email = models.EmailField(max_length=100)
-
-    def __str__(self):
-        return self.name + "" + self.lastname
 
 class Staff(models.Model):
 
@@ -56,7 +39,7 @@ class Staff(models.Model):
 class Service(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    design_id = models.IntegerField( unique=True)
+    design_id = models.IntegerField(unique=True)
     service_name = models.CharField(unique=True, max_length=100)
     portfolio = models.CharField(max_length=250)
     sub_portfolio = models.CharField(max_length=250)
@@ -70,9 +53,10 @@ class Service(models.Model):
         return self.service_name + " { " + self.portfolio + " -> " + self.sub_portfolio + " }"
 
 class Metric(models.Model):
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    design_id = models.IntegerField(default=0)
     service = models.ForeignKey(Service, on_delete=models.PROTECT)
+    design_id = models.IntegerField(default=0)
     metric_name = models.CharField(max_length=100)
     description = models.TextField()
     date_begin = models.DateTimeField(auto_now=True, null=True)
@@ -111,28 +95,28 @@ class MetricValue(models.Model):
     date_end = models.DateTimeField()
 
     history = HistoricalRecords()
-    '''
+
     def save(self, *args, **kwargs):
         # get number of items that have an overlapping start date
         metric_value_overlapping_start = MetricValue.objects.filter(date_begin__gte=self.date_begin,
-                                                                          date_begin__lte=self.date_end).count()
+                                                                    date_begin__lte=self.date_end).count()
 
         # get number of items that have an overlapping end date
         metric_value_overlapping_end = MetricValue.objects.filter(date_end__gte=self.date_begin,
-                                                                        date_end__lte=self.date_end).count()
+                                                                  date_end__lte=self.date_end).count()
 
         overlapping_metric_value_present = metric_value_overlapping_start > 0 or metric_value_overlapping_end > 0
 
         if overlapping_metric_value_present:
-            print("Trying to overlap metric value")
-            #metric = Metric.objects.get(metric_name = self.metric)
-            #return redirect('http://127.0.0.1:8000/admin/app1/metric/6b6ad711-f536-42dd-b4d2-000c98dda3e6/change/')
+            # print("Trying to overlap metric value")
+            raise ValidationError('Date begin or date end field overlaps with other metric values.')
+        elif self.date_begin > self.date_end:
+            raise ValidationError('Date begin cannot be later than date end.')
         else:
-            super(MetricValue, self).save(*args, **kwargs)  # Call the "real" save() method.
-    '''
+            super(MetricValue, self).save(*args, **kwargs)
+
 
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
-
 

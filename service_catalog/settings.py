@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'service_catalog.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'service_catalog',
+        'NAME': 'new_service_catalog',
         'USER': 'bob_marley',
         'PASSWORD': '322223af09',
         'HOST': '63.250.59.170',
