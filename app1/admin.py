@@ -7,6 +7,7 @@ from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.shortcuts import redirect
 from django.contrib.admin.templatetags import admin_modify
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 class RemoveButtons:
 
@@ -116,7 +117,7 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/change_form.html/"
     ordering = ('service__totalorder', 'metric_order', )
-    search_fields = ('metric_name',)
+    search_fields = ('metric_name', 'design_id')
     inlines = [
         MetricValueInline
     ]
@@ -137,9 +138,12 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
         for form in new_forms:
             answer = self.check_overlapping(form.instance)
             if answer == 0:
-                raise ValidationError('Date begin or date end field overlaps with other metric values.')
+                #raise ValidationError('Date begin or date end field overlaps with other metric values.')
+                return redirect(request.path)
             elif answer == 1:
-                raise ValidationError('Date begin cannot be later than date end.')
+                #raise ValidationError(request, 'Date begin cannot be later than date end.')
+                return redirect(request.path)
+
             else:
                 return formset.save()
 

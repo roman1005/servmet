@@ -50,7 +50,7 @@ class Service(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.service_name + " { " + self.portfolio + " -> " + self.sub_portfolio + " }"
+        return str(self.design_id) + "--" + self.service_name + " { " + self.portfolio + " -> " + self.sub_portfolio + " }"
 
 class Metric(models.Model):
 
@@ -71,7 +71,7 @@ class Metric(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.metric_name
+        return str(self.design_id) + "--" + str(self.metric_name)
 
 
 class MetricMeasurement(models.Model):
@@ -89,8 +89,8 @@ class MetricValue(models.Model):
         verbose_name = "Metric value"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    metric= models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=-False)
-    value = models.IntegerField(verbose_name="Metric value", default=-1)
+    metric = models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=-False)
+    value = models.IntegerField(verbose_name="Metric value")
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
 
