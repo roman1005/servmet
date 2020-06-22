@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.simple_tag
 def get_metric_link(original, request):
-    return request.build_absolute_uri('/admin/app1/metric/') + str(original.metric) + "/change"
+    return request.build_absolute_uri('/admin/app1/metric/') + str(original.metric.id) + "/change"
 
 @register.simple_tag
 def get_link(object, request):
