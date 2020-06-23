@@ -189,7 +189,12 @@ class MetricValueView(APIView):
 
             except ValueError:
                 return JsonResponse({'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
+
+
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        #except KeyError:
+            #return JsonResponse("design_id: This field is required." + serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ServiceViewset(viewsets.ModelViewSet):

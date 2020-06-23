@@ -122,6 +122,7 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
         MetricValueInline
     ]
     exclude = ['date_begin', 'date_end',]
+    readonly_fields = ['service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature']
 
     def response_change(self, request, obj):
         return redirect(request.path)

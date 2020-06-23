@@ -64,8 +64,8 @@ class Metric(models.Model):
     status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
     metric_order = models.IntegerField()
     nature = models.CharField(max_length=300)
-    publ_regularity = models.CharField(max_length=100, default="", verbose_name='Publication Regularity')
-    publ_deadline = models.CharField(max_length=100, default="", verbose_name='Publication Deadline')
+    publ_regularity = models.CharField(max_length=100, default="", verbose_name='Publication Regularity', blank=True)
+    publ_deadline = models.CharField(max_length=100, default="", verbose_name='Publication Deadline', blank=True)
     measr_regularity = models.CharField(max_length=100, default="", verbose_name='Measure Regularity')
 
     history = HistoricalRecords()
