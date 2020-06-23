@@ -127,8 +127,8 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
         return redirect(request.path)
 
     def save_model(self, request, obj, form, change):
-        return
-
+        return redirect(request.path)
+    '''
     def save_formset(self, request, form, formset, change):
 
         if len(formset.forms) <= len(formset.initial_forms):
@@ -172,6 +172,7 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
             return 1 #ValidationError('Date begin cannot be later than date end.')
         else:
             return 2
+        '''
 
 
 class MetricValueAdmin(admin.ModelAdmin, RemoveButtons):
@@ -182,7 +183,9 @@ class MetricValueAdmin(admin.ModelAdmin, RemoveButtons):
         return redirect(request.path)
 
     def save_model(self, request, obj, form, change):
-        return
+        obj.user = request.user
+        obj.save()
+        return redirect(request.path)
 
 
 admin.site.register(Service, ServiceAdmin)

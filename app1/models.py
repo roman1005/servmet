@@ -95,7 +95,7 @@ class MetricValue(models.Model):
     date_end = models.DateTimeField()
 
     history = HistoricalRecords()
-
+    '''
     def save(self, *args, **kwargs):
         # get number of items that have an overlapping start date
         metric_value_overlapping_start = MetricValue.objects.filter(date_begin__gte=self.date_begin,
@@ -114,9 +114,9 @@ class MetricValue(models.Model):
             raise ValidationError('Date begin cannot be later than date end.')
         else:
             super(MetricValue, self).save(*args, **kwargs)
+    '''
 
 
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
-
