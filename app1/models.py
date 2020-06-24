@@ -1,9 +1,20 @@
+from email.headerregistry import Group
+
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.mail import send_mail
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, _user_has_module_perms, _user_has_perm, _user_get_permissions, Permission, \
+    UserManager
 import uuid
+
+from django.db.models.manager import EmptyManager
 from phone_field import PhoneField
 from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
 
 STATUS_CHOICES = (
     ('DEF', 'Defined'),
@@ -120,3 +131,7 @@ class MetricValue(models.Model):
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
+
+
+
+

@@ -8,6 +8,22 @@ from django.shortcuts import redirect
 from django.contrib.admin.templatetags import admin_modify
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.contrib.auth.models import User, Group
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models.signals import pre_save
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        instance.groups.add(Group.objects.get(name='Public'))
+
+
+@receiver(pre_save, sender=User)
+def set_new_user_inactive(sender, instance, **kwargs):
+    if instance._state.adding is True:
+        instance.is_staff = True
 
 class RemoveButtons:
 
@@ -122,13 +138,21 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         MetricValueInline
     ]
     exclude = ['date_begin', 'date_end',]
-    readonly_fields = ['service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature']
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and not request.user.is_superuser:  # editing an existing object
+            return self.readonly_fields + ('service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature')
+        return self.readonly_fields
+
+    #readonly_fields = ['service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature']
 
     def response_change(self, request, obj):
         return redirect(request.path)
-
+    '''
     def save_model(self, request, obj, form, change):
         return redirect(request.path)
+    '''
+
     '''
     def save_formset(self, request, form, formset, change):
 
@@ -194,4 +218,5 @@ admin.site.register(Staff, StaffAdmin)
 admin.site.register(Metric, MetricAdmin)
 admin.site.register(MetricMeasurement, SimpleHistoryAdmin)
 admin.site.register(MetricValue, MetricValueAdmin)
+
 # Register your models here.
