@@ -90,7 +90,7 @@ class MetricValue(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=-False)
-    value = models.IntegerField(verbose_name="Metric value")
+    value = models.FloatField(verbose_name="Metric value")
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
 

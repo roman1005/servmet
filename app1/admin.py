@@ -90,7 +90,7 @@ class MetricValueInline(admin.TabularInline):
 #class MetricMeasurementInLine()
 
 
-class ServiceAdmin(admin.ModelAdmin, RemoveButtons):
+class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     change_form_template = "admin/edit_inline/change_form.html/"
     inlines = [
         MetricInline,
@@ -106,14 +106,14 @@ class ServiceAdmin(admin.ModelAdmin, RemoveButtons):
         return self.totalorder
 
 
-class StaffAdmin(admin.ModelAdmin):
+class StaffAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('name',)
     search_fields = ('name',)
 
     def __unicode__(self):
         return self.name
 
-class MetricAdmin(admin.ModelAdmin, RemoveButtons):
+class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/change_form.html/"
     ordering = ('service__totalorder', 'metric_order', )
@@ -176,7 +176,7 @@ class MetricAdmin(admin.ModelAdmin, RemoveButtons):
         '''
 
 
-class MetricValueAdmin(admin.ModelAdmin, RemoveButtons):
+class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/metric_values.html/"
 

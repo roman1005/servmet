@@ -101,9 +101,10 @@ class ServiceView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             service_saved = serializer.save()
+
         return Response({
             "success": "Service '{}' updated successfully".format(service_saved.service_name)
-        })
+            })
 
 
 class MetricView(APIView):
