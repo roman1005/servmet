@@ -12,18 +12,36 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
+from django.contrib.auth.signals import user_logged_in
 
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         instance.groups.add(Group.objects.get(name='Public'))
-
+    try:
+        staff_id = Staff.objects.get(name = instance.first_name+" "+instance.last_name)
+        if Service.objects.filter(owner=staff_id).count() > 0:
+            instance.groups.add(Group.objects.get(name='ServiceMetricOwner'))
+    except:
+        pass
 
 @receiver(pre_save, sender=User)
-def set_new_user_inactive(sender, instance, **kwargs):
+def set_new_user_staff(sender, instance, **kwargs):
     if instance._state.adding is True:
         instance.is_staff = True
+
+@receiver(user_logged_in)
+def post_login(sender, user, request, **kwargs):
+    try:
+        staff_id = Staff.objects.get(name = user.first_name+" "+user.last_name)
+        if Service.objects.filter(owner=staff_id).count() > 0:
+            user.groups.add(Group.objects.get(name='ServiceMetricOwner'))
+        else:
+            user.groups.remove(Group.objects.get(name='ServiceMetricOwner'))
+    except:
+        if Group.objects.get(name='ServiceMetricOwner') in user.groups.all():
+            user.groups.remove(Group.objects.get(name='ServiceMetricOwner'))
 
 class RemoveButtons:
 
