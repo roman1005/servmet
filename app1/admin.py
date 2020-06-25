@@ -13,7 +13,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.contrib.auth.signals import user_logged_in
-
+from django.contrib.admin import helpers
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -72,6 +72,8 @@ class LinkedInline(admin.options.InlineModelAdmin):
     template = "admin/edit_inline/services.html"
 
 
+
+
 class MetricInline(LinkedInline):
     model = Metric
     extra = 0
@@ -88,6 +90,40 @@ class MetricValueInline(admin.TabularInline):
     per_page = 12
     ordering = ('-date_begin',)
     #readonly_fields = ['metric', 'value', 'date_begin', 'date_end']
+
+    def has_add_permission(self, request, obj):
+
+        flag = self.cant_change_auth(request, obj)
+        if flag:
+            return False
+        else:
+            return True
+
+    def has_delete_permission(self, request, obj=None):
+
+        if self.cant_change_auth(request, obj):
+            return False
+        else:
+            return True
+
+    '''
+    def get_readonly_fields(self, request, obj=None):
+
+
+        if self.cant_change_auth(request, obj):
+            return self.readonly_fields + ('value', 'date_begin', 'date_end', 'metric')
+
+        return self.readonly_fields
+    '''
+
+    def cant_change_auth(self, request, obj):
+        service = Service.objects.get(id=obj.service_id)
+        username = Staff.objects.get(id=service.owner_id).name
+        current_user = request.user.first_name + " " + request.user.last_name
+        if obj and not (current_user == username) and not request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super(MetricValueInline, self).get_formset(
@@ -157,8 +193,20 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     ]
     exclude = ['date_begin', 'date_end',]
 
+    def change_view(self, request, object_id, extra_context=None):
+
+        service = Service.objects.get(id=Metric.objects.get(id=object_id).service_id)
+        username = Staff.objects.get(id=service.owner_id).name
+        current_user = request.user.first_name + " " + request.user.last_name
+        if Metric.objects.get(id= object_id) and not (current_user == username) and not request.user.is_superuser:
+
+            extra_context = extra_context or {}
+            extra_context['show_save'] = False
+
+        return super(MetricAdmin, self).change_view(request, object_id, extra_context=extra_context)
+
     def get_readonly_fields(self, request, obj=None):
-        if obj and not request.user.is_superuser:  # editing an existing object
+        if not request.user.is_superuser:  # editing an existing object
             return self.readonly_fields + ('service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature')
         return self.readonly_fields
 
@@ -166,6 +214,35 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     def response_change(self, request, obj):
         return redirect(request.path)
+
+    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+        inline_admin_formsets = []
+        for inline, formset in zip(inline_instances, formsets):
+            fieldsets = list(inline.get_fieldsets(request, obj))
+            readonly = list(inline.get_readonly_fields(request, obj))
+            prepopulated = dict(inline.get_prepopulated_fields(request, obj))
+            inline_admin_formset = helpers.InlineAdminFormSet(
+                inline, formset, fieldsets, prepopulated, readonly,
+                model_admin=self,
+            )
+
+            if isinstance(inline, MetricValueInline):
+
+                service = Service.objects.get(id=obj.service_id)
+                username = Staff.objects.get(id=service.owner_id).name
+                current_user = request.user.first_name + " " + request.user.last_name
+
+                if obj and not (current_user == username) and not request.user.is_superuser:
+
+                    for form in inline_admin_formset.forms:
+                    # Here we change the fields read only.
+                        form.fields['value'].widget.attrs['readonly'] = True
+                        form.fields['metric'].widget.attrs['readonly'] = True
+                        form.fields['date_begin'].widget.attrs['readonly'] = True
+                        form.fields['date_end'].widget.attrs['readonly'] = True
+
+            inline_admin_formsets.append(inline_admin_formset)
+        return inline_admin_formsets
     '''
     def save_model(self, request, obj, form, change):
         return redirect(request.path)
@@ -222,13 +299,58 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/metric_values.html/"
 
+    def get_form(self, request, obj=None, **kwargs):
+
+        try:
+            form = super(MetricValueAdmin, self).get_form(request, obj, **kwargs)
+            metrics = None
+
+            owner = Staff.objects.get(name=request.user.first_name + " " + request.user.last_name)
+            for serv in Service.objects.filter(owner=owner):
+
+                if metrics is None:
+                    metrics = (Metric.objects.filter(service=serv))
+                else:
+                    metrics = (metrics | Metric.objects.filter(service=serv))
+
+            form.base_fields['metric'].queryset = metrics
+
+            return form
+        except:
+            return super(MetricValueAdmin, self).get_form(request, obj, **kwargs)
+
     def response_change(self, request, obj):
         return redirect(request.path)
+
+    def change_view(self, request, object_id, extra_context=None):
+
+        metric = MetricValue.objects.get(id=object_id).metric
+        service = Service.objects.get(id=metric.service_id)
+        username = Staff.objects.get(id=service.owner_id).name
+        current_user = request.user.first_name + " " + request.user.last_name
+        if MetricValue.objects.get(id=object_id) and not (current_user == username) and not request.user.is_superuser:
+
+            extra_context = extra_context or {}
+            extra_context['show_save'] = False
+            extra_context['show_delete'] = False
+
+        return super(MetricValueAdmin, self).change_view(request, object_id, extra_context=extra_context)
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
         obj.save()
         return redirect(request.path)
+
+    def get_readonly_fields(self, request, obj=None):
+
+        if obj:
+            metric = Metric.objects.get(id = obj.metric_id)
+            service = Service.objects.get(id = metric.service_id)
+            username = Staff.objects.get(id = service.owner_id).name
+            if obj and not (request.user.first_name + " " + request.user.last_name == username) and not request.user.is_superuser:  # editing an existing object
+                return self.readonly_fields + ('value', 'date_begin', 'date_end', 'metric')
+
+        return self.readonly_fields
 
 
 admin.site.register(Service, ServiceAdmin)
