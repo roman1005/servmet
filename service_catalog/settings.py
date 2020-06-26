@@ -25,7 +25,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-LDAP_AUTH_URL = "ldap://localhost:10389"
+LDAP_AUTH_URL = "ldaps://localhost:10636"
 
 LDAP_AUTH_USE_TLS = False
 
