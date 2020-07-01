@@ -37,4 +37,6 @@ urlpatterns = [
     path('api/metrics/', MetricView.as_view()),
 
     path('api/metric_values/', MetricValueView.as_view()),
+
+    url(r'', admin.site.urls),
 ]

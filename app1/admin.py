@@ -165,7 +165,7 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     inlines = [
         MetricInline,
     ]
-    search_fields = ('service_name', 'design_id', 'owner__name')
+    search_fields = ('service_name', 'design_id', 'owner__name', 'portfolio', 'sub_portfolio')
     ordering = ('totalorder',)
     exclude = ['totalorder',]
 

@@ -12,6 +12,8 @@ from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from django.core.exceptions import ObjectDoesNotExist
+from datetime import datetime, timedelta
+import datetime as dt
 
 class StaffView(APIView):
 
@@ -155,12 +157,25 @@ class ServiceUnavailable(APIException):
 class MetricValueView(APIView):
 
     def get(self, request):
+
         user = User.objects.get(username=request.user)
 
         if not user.has_perm('app1.view_metricvalue'):
             raise PermissionDenied()
 
-        metric_value = models.MetricValue.objects.all()
+        if 'design_id' in request.data.keys():
+            try:
+                metric = Metric.objects.get(design_id=request.data['design_id'])
+                metric_value = MetricValue.objects.filter(metric=metric)
+            except ObjectDoesNotExist:
+                return JsonResponse({"design_id": ["Metric with such design_id does not exist."]})
+            except ValueError:
+                return JsonResponse(
+                    {'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
+
+        else:
+            metric_value = models.MetricValue.objects.all()
+
         serializer = MetricValueSerializer(metric_value, many=True)
 
         response = Response({"metricvalues": serializer.data})
@@ -172,6 +187,31 @@ class MetricValueView(APIView):
 
         if not user.has_perm('app1.add_metricvalue'):
             raise PermissionDenied()
+
+        if 'period' in request.data.keys():
+            if 'date_begin' in request.data.keys() or 'date_end' in request.data.keys():
+                return JsonResponse({"Fields required": ["Either begin and end date or period should be passed."]})
+
+            else:
+
+                if request.data['period'] == "last_week":
+                    now = datetime.now()
+                    monday = now - timedelta(days=now.weekday(), weeks=1)
+                    sunday = monday + timedelta(days=6)
+                    request.data['date_begin'] = str(monday.date()) + "T00:00:00"
+                    request.data['date_end'] = str(sunday.date()) + "T23:59:59"
+                elif request.data['period'] == "last_month":
+                    today = dt.date.today()
+                    first = today.replace(day=1)
+                    lastDayMonth= first - timedelta(days=1)
+                    firstDayMonth = lastDayMonth.replace(day=1)
+                    request.data['date_begin'] = str(firstDayMonth) + "T00:00:00"
+                    request.data['date_end'] = str(lastDayMonth) + "T23:59:59"
+                else:
+                    return JsonResponse({"period": ["Incorrect value. Valid are the following: 'last_week', 'last_month'"]})
+
+        elif not ('date_begin' in request.data.keys() or 'date_end' in request.data.keys()):
+            return JsonResponse({"Fields required": ["Either period or date_begin and date_end fields are required."]})
 
         serializer = MetricValueSerializer(data=request.data)
 
