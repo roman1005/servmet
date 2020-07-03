@@ -14,6 +14,8 @@ from rest_framework.exceptions import APIException
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime as dt
+from django.db import IntegrityError
+from django.http import HttpResponse
 
 class StaffView(APIView):
 
@@ -173,13 +175,13 @@ class MetricValueView(APIView):
                 return JsonResponse(
                     {'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
 
+            serializer = MetricValueSerializer(metric_value, many=True)
+
+            response = Response({"metricvalues": serializer.data})
+            return response
+
         else:
-            metric_value = models.MetricValue.objects.all()
-
-        serializer = MetricValueSerializer(metric_value, many=True)
-
-        response = Response({"metricvalues": serializer.data})
-        return response
+            return JsonResponse({"design_id": ["This field is required."]})
 
     def post(self, request):
 
@@ -230,7 +232,8 @@ class MetricValueView(APIView):
 
             except ValueError:
                 return JsonResponse({'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
-
+            except IntegrityError:
+                return HttpResponse('Duplicate entry: "metric", "date_begin", "date_end" should be unique combination of fields.')
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
