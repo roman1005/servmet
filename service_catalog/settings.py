@@ -8,7 +8,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import django_python3_ldap
+#import django_python3_ldap
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -33,7 +33,7 @@ LDAP_AUTH_SEARCH_BASE = "ou=user,o=Company"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "django_python3_ldap.auth.LDAPBackend",
+    #"django_python3_ldap.auth.LDAPBackend",
 ]
 
 #AUTH_USER_MODEL = 'app1.User'
@@ -50,10 +50,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'django_python3_ldap',
+
     #'django_python3_ldap',
 ]
-
+'''
 LDAP_AUTH_OBJECT_CLASS = "inetOrgPerson"
 
 LDAP_AUTH_USER_FIELDS = {
@@ -114,6 +114,7 @@ LOGGING = {
         },
     },
 }
+'''
 
 MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',

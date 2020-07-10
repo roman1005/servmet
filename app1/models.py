@@ -34,6 +34,16 @@ STATUS_CHOICES = (
 )
 
 
+REGULARITY_CHOICES = (
+    ('',''),
+    ('daily','daily'),
+    ('weekly','weekly'),
+    ('monthly','monthly'),
+    ('quaterly','quaterly'),
+    ('half-year','half-year'),
+    ('yearly', 'yearly'),
+)
+
 class Staff(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -75,7 +85,7 @@ class Metric(models.Model):
     status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
     metric_order = models.IntegerField()
     nature = models.CharField(max_length=300)
-    publ_regularity = models.CharField(max_length=100, default="", verbose_name='Publication Regularity', blank=True)
+    publ_regularity = models.CharField(max_length=100, choices=REGULARITY_CHOICES, default="", verbose_name='Publication Regularity', blank=True)
     publ_deadline = models.CharField(max_length=100, default="", verbose_name='Publication Deadline', blank=True)
     measr_regularity = models.CharField(max_length=100, default="", verbose_name='Measure Regularity')
 
