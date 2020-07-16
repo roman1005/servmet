@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_modify import submit_row
-from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue
+from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue, MetricValueRegistration
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.admin.views.main import ChangeList
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
@@ -34,8 +34,8 @@ def set_new_user_staff(sender, instance, **kwargs):
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
     try:
-        staff = Staff.objects.get(name = user.first_name+" "+user.last_name)
-        if Service.objects.filter(owner=staff).count() > 0:
+        staff_id = Staff.objects.get(name = user.first_name+" "+user.last_name)
+        if Service.objects.filter(owner=staff_id).count() > 0:
             user.groups.add(Group.objects.get(name='ServiceMetricOwner'))
         else:
             user.groups.remove(Group.objects.get(name='ServiceMetricOwner'))
@@ -317,25 +317,18 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
             metrics = None
 
             owner = Staff.objects.get(name=request.user.first_name + " " + request.user.last_name)
+            for serv in Service.objects.filter(owner=owner):
 
-        except Staff.DoesNotExist:
-            try:
-                owner = Staff.objects.get(name=request.user.last_name + " " + request.user.first_name)
-
-            except Staff.DoesNotExist:
-                return super(MetricValueAdmin, self).get_form(request, obj, **kwargs)
-
-        for serv in Service.objects.filter(owner=owner):
-
-            if metrics is None:
+                if metrics is None:
                     metrics = (Metric.objects.filter(service=serv))
-            else:
-                metrics = (metrics | Metric.objects.filter(service=serv))
+                else:
+                    metrics = (metrics | Metric.objects.filter(service=serv))
 
-        form.base_fields['metric'].queryset = metrics
+            form.base_fields['metric'].queryset = metrics
 
-        return form
-
+            return form
+        except:
+            return super(MetricValueAdmin, self).get_form(request, obj, **kwargs)
 
     def response_change(self, request, obj):
         return redirect(request.path)
@@ -345,10 +338,8 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         metric = MetricValue.objects.get(id=object_id).metric
         service = Service.objects.get(id=metric.service_id)
         username = Staff.objects.get(id=service.owner_id).name
-        current_user1 = request.user.first_name + " " + request.user.last_name
-        current_user2 = request.user.last_name + " " + request.user.first_name
-
-        if MetricValue.objects.get(id=object_id) and not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
+        current_user = request.user.first_name + " " + request.user.last_name
+        if MetricValue.objects.get(id=object_id) and not (current_user == username) and not request.user.is_superuser:
 
             extra_context = extra_context or {}
             extra_context['show_save'] = False
@@ -367,18 +358,24 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
             metric = Metric.objects.get(id = obj.metric_id)
             service = Service.objects.get(id = metric.service_id)
             username = Staff.objects.get(id = service.owner_id).name
-            current_user1 = request.user.first_name + " " + request.user.last_name
-            current_user2 = request.user.last_name + " " + request.user.first_name
-            if obj and not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:  # editing an existing object
+            if obj and not (request.user.first_name + " " + request.user.last_name == username) and not request.user.is_superuser:  # editing an existing object
                 return self.readonly_fields + ('value', 'date_begin', 'date_end', 'metric')
 
         return self.readonly_fields
 
+class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    ordering = ('date_end',)
+    search_fields = ('name',)
+    exclude= []
+
+    def __unicode__(self):
+        return self.name
 
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Staff, StaffAdmin)
 admin.site.register(Metric, MetricAdmin)
 admin.site.register(MetricMeasurement, SimpleHistoryAdmin)
 admin.site.register(MetricValue, MetricValueAdmin)
+admin.site.register(MetricValueRegistration, MetricValueRegistrationAdmin)
 
 # Register your models here.

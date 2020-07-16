@@ -111,7 +111,7 @@ class MetricValue(models.Model):
         unique_together = ('metric', 'date_begin', 'date_end',)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    metric = models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=-False)
+    metric = models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=False)
     value = models.FloatField(verbose_name="Metric value")
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
@@ -144,5 +144,20 @@ class MetricValue(models.Model):
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
 
 
+class MetricValueRegistration (models.Model):
+    class Meta:
+        verbose_name = "Metric value registration"
+        unique_together = ('metric', 'date_begin', 'date_end',)
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
+    date_begin = models.DateTimeField(auto_now_add=True)
+    date_end = models.DateTimeField(auto_now_add=True)
+    metricValue = models.ForeignKey (MetricValue, on_delete=models.PROTECT, blank=True, null=True)
+    history = HistoricalRecords()
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Created at')
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Updated at')
 
+    def __str__(self):
+        design_id = Metric.objects.get(id=self.metric_id).design_id
+        return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end)
