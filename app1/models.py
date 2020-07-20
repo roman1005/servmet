@@ -17,20 +17,20 @@ from django.utils.translation import gettext_lazy as _
 
 
 STATUS_CHOICES = (
-    ('DEF', 'Defined'),
-    ('SUB', 'Submited'),
-    ('DEP', 'Deployed'),
-    ('OP', 'Operational'),
-    ('RETU', 'Retired(Upgrade)'),
-    ('RETR', 'Retired(Replacemenet)'),
-    ('RETO', 'Retired(Obsolete)'),
-    ('CANU', 'Cancelled(Upgrade)'),
-    ('CANR', 'Cancelled(Replacemenet)'),
-    ('EXT', 'External premises'),
-    ('UNCO', 'Under consideration'),
-    ('UNK', 'Unknown'),
-    ('DIS', 'Displaced'),
-    ('NA', 'Not agreed'),
+    ('Defined', 'Defined'),
+    ('Submited', 'Submited'),
+    ('Deployed', 'Deployed'),
+    ('Operational', 'Operational'),
+    ('Retired(Upgrade)', 'Retired(Upgrade)'),
+    ('Retired(Replacemenet)', 'Retired(Replacemenet)'),
+    ('Retired(Obsolete)', 'Retired(Obsolete)'),
+    ('Cancelled(Upgrade)', 'Cancelled(Upgrade)'),
+    ('Cancelled(Replacemenet)', 'Cancelled(Replacemenet)'),
+    ('External premises', 'External premises'),
+    ('Under consideration', 'Under consideration'),
+    ('Unknown', 'Unknown'),
+    ('Displaced', 'Displaced'),
+    ('Not agreed', 'Not agreed'),
 )
 
 
@@ -66,7 +66,7 @@ class Service(models.Model):
     sub_portfolio = models.CharField(max_length=250)
     customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID',blank=True, null=True)
     owner = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='ownerID', blank=True, null=True)
-    status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
+    status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='Defined')
     totalorder = models.CharField( max_length=100, blank=True, null=True, verbose_name="Total order")
     history = HistoricalRecords()
 
