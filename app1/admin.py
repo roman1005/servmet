@@ -14,6 +14,13 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.admin import helpers
+from django.core.exceptions import ObjectDoesNotExist
+from datetime import datetime
+
+@receiver(pre_save, sender=User)
+def set_new_user_staff(sender, instance, **kwargs):
+    if instance._state.adding is True:
+        instance.is_staff = True
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -26,10 +33,14 @@ def create_user_profile(sender, instance, created, **kwargs):
     except Staff.DoesNotExist:
         pass
 
-@receiver(pre_save, sender=User)
-def set_new_user_staff(sender, instance, **kwargs):
-    if instance._state.adding is True:
-        instance.is_staff = True
+#@receiver(pre_save, sender = MetricValue)
+#def prevent_not_scheduled(sender, instance, **kwargs):
+
+@receiver(post_save, sender = MetricValue)
+def register_measurement(sender, instance, **kwargs):
+    mtr_val_reg = MetricValueRegistration.objects.get(metric=instance.metric, date_begin=instance.date_begin, date_end=instance.date_end)
+    mtr_val_reg.metricValue = instance
+    mtr_val_reg.save()
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):

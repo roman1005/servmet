@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.auth.models import User, _user_has_module_perms, _user_has_perm, _user_get_permissions, Permission, \
     UserManager
 import uuid
-
+from django.http import HttpResponse
 from django.db.models.manager import EmptyManager
 from phone_field import PhoneField
 from simple_history.models import HistoricalRecords
@@ -57,6 +57,7 @@ class Staff(models.Model):
     def __str__(self):
         return self.name
 
+
 class Service(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -66,7 +67,7 @@ class Service(models.Model):
     sub_portfolio = models.CharField(max_length=250)
     customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID',blank=True, null=True)
     owner = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='ownerID', blank=True, null=True)
-    status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='Defined')
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='Defined')
     totalorder = models.CharField( max_length=100, blank=True, null=True, verbose_name="Total order")
     history = HistoricalRecords()
 
@@ -82,7 +83,7 @@ class Metric(models.Model):
     description = models.TextField()
     date_begin = models.DateTimeField(auto_now=True, null=True)
     date_end = models.DateTimeField(auto_now=True, null=True)
-    status = models.CharField(max_length=4, choices=STATUS_CHOICES, default='DEF')
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='DEF')
     metric_order = models.IntegerField()
     nature = models.CharField(max_length=300)
     publ_regularity = models.CharField(max_length=100, choices=REGULARITY_CHOICES, default="", verbose_name='Publication Regularity', blank=True)
@@ -117,6 +118,25 @@ class MetricValue(models.Model):
     date_end = models.DateTimeField()
 
     history = HistoricalRecords()
+    
+    def save(self, *args, **kwargs):
+
+        numb = MetricValueRegistration.objects.filter(metric=self.metric, metricValue=None).count()
+        if numb == 0:
+            raise ValidationError("Measurement of metric value for this metric isn't scheduled")
+        else:
+            if MetricValueRegistration.objects.filter(metric=self.metric,
+                                                                       date_begin=self.date_begin,
+                                                                       date_end=self.date_end).count() == 1:
+               registration = MetricValueRegistration.objects.get(metric=self.metric,
+                                                                       date_begin=self.date_begin,
+                                                                       date_end=self.date_end)
+               if registration.metricValue is not None:
+                   raise ValidationError("Measurement of metric value for this metric have already been done")
+            else:
+                raise ValidationError("Measurement of metric value on these dates isn't scheduled")
+
+        super(MetricValue, self).save(*args, **kwargs)
     '''
     def save(self, *args, **kwargs):
         # get number of items that have an overlapping start date
@@ -151,12 +171,18 @@ class MetricValueRegistration (models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
-    date_begin = models.DateTimeField(auto_now_add=True)
-    date_end = models.DateTimeField(auto_now_add=True)
+    date_begin = models.DateTimeField()
+    date_end = models.DateTimeField()
     metricValue = models.ForeignKey (MetricValue, on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Created at')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Updated at')
+
+    @classmethod
+    def create(cls, metric, date_begin, date_end):
+        mtrc_val_reg = cls(metric=metric, date_begin=date_begin, date_end=date_end)
+        # do something with the book
+        return mtrc_val_reg
 
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id

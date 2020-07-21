@@ -34,9 +34,3 @@ class MetricValueSerializer(serializers.ModelSerializer):
         model = MetricValue
         depth = 1
         exclude = []
-
-class MetricValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Metric
-        depth = 1
-        exclude = []
