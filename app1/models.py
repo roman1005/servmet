@@ -43,7 +43,12 @@ REGULARITY_CHOICES = (
     ('half-year','half-year'),
     ('yearly', 'yearly'),
 )
+SYSTEM_NOTIFICATION_CHOICES = (
+    ('INFO','INFO'),
+    ('WARNING','WARNING'),
+    ('ALERT','ALERT'),
 
+)
 class Staff(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -70,6 +75,8 @@ class Service(models.Model):
     status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='Defined')
     totalorder = models.CharField( max_length=100, blank=True, null=True, verbose_name="Total order")
     history = HistoricalRecords()
+    notification_on = models.BooleanField(default=True, blank=True, null=True, verbose_name='Notification on')
+    alerts_on = models.BooleanField(default=True, blank=True, null=True, verbose_name='Alerts on')
 
     def __str__(self):
         return str(self.design_id) + "--" + self.service_name + " { " + self.portfolio + " -> " + self.sub_portfolio + " }"
@@ -187,3 +194,21 @@ class MetricValueRegistration (models.Model):
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end)
+
+class UserNotification(models.Model):
+    class Meta:
+        verbose_name = "User notification"
+
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.CharField(max_length=30, choices=SYSTEM_NOTIFICATION_CHOICES, default='INFO')
+    text= models.TextField(verbose_name="Content")
+    subject = models.CharField(max_length=100)
+    recipientList=models.TextField(verbose_name="To")
+    history = HistoricalRecords()
+    status = models.FloatField(verbose_name="Delivery status", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Created at')
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Updated at')
+
+    def __str__(self):
+         return str(self.recipientList) + "  -  " + str(self.subject) + " - " + str(self.created_at)

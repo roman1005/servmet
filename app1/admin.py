@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_modify import submit_row
-from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue, MetricValueRegistration
+from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue, MetricValueRegistration, UserNotification
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.admin.views.main import ChangeList
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
@@ -185,7 +185,7 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     inlines = [
         MetricInline,
     ]
-    search_fields = ('service_name', 'design_id', 'owner__name', 'portfolio', 'sub_portfolio')
+    search_fields = ('service_name', 'design_id', 'owner__name', 'portfolio', 'sub_portfolio','status' )
     ordering = ('totalorder',)
     exclude = ['totalorder',]
 
@@ -382,11 +382,20 @@ class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     def __unicode__(self):
         return self.name
 
+class UserNotificationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    ordering = ('created_at',)
+    search_fields = ('subject','text','type','recipient_list')
+    exclude= []
+
+    def __unicode__(self):
+        return self.name
+
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Staff, StaffAdmin)
 admin.site.register(Metric, MetricAdmin)
 admin.site.register(MetricMeasurement, SimpleHistoryAdmin)
 admin.site.register(MetricValue, MetricValueAdmin)
 admin.site.register(MetricValueRegistration, MetricValueRegistrationAdmin)
+admin.site.register(UserNotification, UserNotificationAdmin)
 
 # Register your models here.

@@ -83,6 +83,7 @@ def end_period(now, period):
     else:
         return {"res": False}
 
+from app1.models import UserNotification
 
 def make_registrations(date_begin, date_end):
 
@@ -132,3 +133,9 @@ def checkMetrixValueRegistration():
 
     current_time = now.strftime("%H:%M:%S")
     print("Metrix check", current_time)
+
+
+
+def notifyUsers():
+   for user_notification in UserNotification.objects.get(status__isnull=True):
+        print(user_notification.text)
