@@ -128,20 +128,20 @@ class MetricValue(models.Model):
     
     def save(self, *args, **kwargs):
 
-        numb = MetricValueRegistration.objects.filter(metric=self.metric, metricValue=None).count()
+        numb = MetricValueRegistration.objects.filter(metric=self.metric).count()
         if numb == 0:
             raise ValidationError("Measurement of metric value for this metric isn't scheduled")
         else:
             if MetricValueRegistration.objects.filter(metric=self.metric,
                                                                        date_begin=self.date_begin,
-                                                                       date_end=self.date_end).count() == 1:
+                                                                       date_end=self.date_end).count() == 1: #it can be either 0 or 1 because of unique_together
                registration = MetricValueRegistration.objects.get(metric=self.metric,
                                                                        date_begin=self.date_begin,
                                                                        date_end=self.date_end)
                if registration.metricValue is not None:
-                   raise ValidationError("Measurement of metric value for this metric have already been done")
+                   raise ValidationError("Measurement of metric value for this metric on these datetimes have already been done")
             else:
-                raise ValidationError("Measurement of metric value on these dates isn't scheduled")
+                raise ValidationError("Measurement of metric value for this metric on these datetimes isn't scheduled")
 
         super(MetricValue, self).save(*args, **kwargs)
     '''

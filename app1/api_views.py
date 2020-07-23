@@ -15,6 +15,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime as dt
 from django.db import IntegrityError
+from simple_history.models import HistoricalRecords
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 
 class StaffView(APIView):
@@ -232,9 +234,12 @@ class MetricValueView(APIView):
 
             except ValueError:
                 return JsonResponse({'design_id': ["Expected a number but got '" + str(request.data['design_id']) + "'"]})
+
             except IntegrityError:
                 return HttpResponse('Duplicate entry: "metric", "date_begin", "date_end" should be unique combination of fields.')
 
+            except ValidationError as err:
+                return HttpResponse(err.args[0])
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         #except KeyError:
