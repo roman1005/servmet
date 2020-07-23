@@ -1,89 +1,11 @@
-from app1.models import MetricValueRegistration, Metric, Service
-from datetime import datetime, timedelta
+from app1.models import MetricValueRegistration, Metric
 from django.db import IntegrityError
 import logging
 
+from .dates_processing import *
+
 logger = logging.getLogger(__name__)
 
-def last_day_of_month(any_day):
-    next_month = any_day.replace(day=28) + timedelta(days=4)  # this will never fail
-    return next_month - timedelta(days=next_month.day)
-
-def is_quartal(date):
-
-    if date.month == 3 and date.day == 31:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=1)
-        return {"res": True, "begin": date_begin}
-
-    elif date.month == 6 and date.day == 30:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=4)
-        return {"res": True, "begin": date_begin}
-
-    elif date.month == 9 and date.day == 30:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=7)
-        return {"res": True, "begin": date_begin}
-
-    elif date.month == 12 and date.day == 31:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=10)
-        return {"res": True, "begin": date_begin}
-
-    else:
-        return {"res": False}
-
-def is_half_year(date):
-
-    if date.month == 6 and date.day == 30:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=1)
-        return {"res": True, "begin": date_begin}
-
-    elif date.month == 12 and date.day == 31:
-        date_begin = datetime.now()
-        date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=7)
-        return {"res": True, "begin": date_begin}
-
-    else:
-        return {"res": False}
-
-def end_period(now, period):
-
-    today23pm = now.replace(hour=23, minute=0, second=0, microsecond=0)
-
-    if now.time() > today23pm.time():
-
-        if now.date().weekday() == 6 and period == 'week':
-            date_begin = now - timedelta(days=now.weekday(), weeks=0)
-            date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0)
-            return {"res": True, "begin": date_begin}
-
-        elif now.date == last_day_of_month(now) and period == 'month':
-            date_begin = now.replace(day=1)
-            date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0)
-            return {"res": True, "begin": date_begin}
-
-        elif is_quartal(now)['res'] == True and period == 'quartal':
-            return is_quartal(now)
-
-        elif is_half_year(now)['res'] == True and period == 'half_year':
-            return is_half_year(now)
-
-        elif now.month == 12 and now.day == 31:
-
-            date_begin = datetime.now()
-            date_begin = date_begin.replace(hour=0, minute=0, second=0, microsecond=0, day=1, month=1)
-            return {"res": True, "begin": date_begin}
-
-        else:
-            return {"res": False}
-
-    else:
-        return {"res": False}
-
-from app1.models import UserNotification
 
 def make_registrations(date_begin, date_end):
 
@@ -117,25 +39,27 @@ def make_registrations(date_begin, date_end):
 def checkMetrixValueRegistration():
 
     now = datetime.now()
-    date_end = now.replace(hour=23, minute = 0, second=0, microsecond=0)
+
+    yesterday = get_yesterday(now)
 
     periods = ['week', 'month', 'quartal', 'half_year', 'year']
 
-    '''
-    for service in Service.objects.all():
-        print(service.status)
-    '''
+    if yesterday == first_last_day_of_week(yesterday)['last']:
+        make_registrations(first_last_day_of_week(yesterday)['first'], first_last_day_of_week(yesterday)['last'])
 
-    for period in periods:
-        if end_period(now, period)["res"]:
-            date_begin = end_period(now, period)['begin']
-            make_registrations(date_begin, date_end)
+    elif yesterday == first_last_day_of_month(yesterday)['last']:
+        make_registrations(first_last_day_of_month(yesterday)['first'], first_last_day_of_month(yesterday)['last'])
+
+    elif yesterday == first_last_day_of_quartal(yesterday)['last']:
+        make_registrations(first_last_day_of_quartal(yesterday)['first'], first_last_day_of_quartal(yesterday)['last'])
+
+    elif yesterday == first_last_day_of_half_year(yesterday)['last']:
+        make_registrations(first_last_day_of_half_year(yesterday)['first'], first_last_day_of_half_year(yesterday)['last'])
+
+    elif yesterday == first_last_day_of_year(yesterday)['last']:
+        make_registrations(first_last_day_of_year(yesterday)['first'], first_last_day_of_year(yesterday)['last'])
+
+
 
     current_time = now.strftime("%H:%M:%S")
     print("Metrix check", current_time)
-
-
-
-def notifyUsers():
-   for user_notification in UserNotification.objects.get(status__isnull=True):
-        print(user_notification.text)
