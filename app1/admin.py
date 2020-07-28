@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_modify import submit_row
+
+from app1.metricsValueRegistrationJob import sendUserNotification
 from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue, MetricValueRegistration, UserNotification
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.admin.views.main import ChangeList
@@ -38,9 +40,10 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender = MetricValue)
 def register_measurement(sender, instance, **kwargs):
-    mtr_val_reg = MetricValueRegistration.objects.get(metric=instance.metric, date_begin=instance.date_begin, date_end=instance.date_end)
-    mtr_val_reg.metricValue = instance
-    mtr_val_reg.save()
+    if instance.metric.service.status=="Operational":
+        mtr_val_reg = MetricValueRegistration.objects.get(metric=instance.metric, date_begin=instance.date_begin, date_end=instance.date_end)
+        mtr_val_reg.metricValue = instance
+        mtr_val_reg.save()
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
@@ -188,7 +191,7 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     search_fields = ('service_name', 'design_id', 'owner__name', 'portfolio', 'sub_portfolio','status' )
     ordering = ('totalorder',)
     exclude = ['totalorder',]
-
+    list_display = ('design_id','service_name','portfolio','sub_portfolio','status')
     def response_change(self, request, obj):
         return redirect(request.path)
 
@@ -199,7 +202,7 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 class StaffAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('name',)
     search_fields = ('name',)
-
+    list_display=('name','phone_number')
     def __unicode__(self):
         return self.name
 
@@ -212,7 +215,7 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         MetricValueInline
     ]
     exclude = ['date_begin', 'date_end',]
-
+    list_display = ('design_id','metric_name','status','date_begin','date_end')
     def change_view(self, request, object_id, extra_context=None):
 
         service = Service.objects.get(id=Metric.objects.get(id=object_id).service_id)
@@ -384,11 +387,27 @@ class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 
 class UserNotificationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('created_at',)
-    search_fields = ('subject','text','type','recipient_list')
+    search_fields = ('subject','text','type','recipientList')
+    list_display = ('type', 'subject', 'recipientList','created_at','status')
     exclude= []
+    actions = ['send_notification', ]
+    readonly_fields = ["status"]
 
     def __unicode__(self):
         return self.name
+
+
+
+    def send_notification(self, request, queryset):
+       short_description = "Send selected User notifications"
+       for user_notification in queryset:
+           from datetime import datetime
+           now = datetime.now()
+
+           current_time = now.strftime("%H:%M:%S")
+           print(current_time, 'sending',str(user_notification))
+           sendUserNotification(user_notification)
+
 
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Staff, StaffAdmin)

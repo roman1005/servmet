@@ -1,15 +1,24 @@
+import pytz
+
+from django.core.mail import send_mail
+
 from app1.models import MetricValueRegistration, Metric
 from django.db import IntegrityError
 import logging
 
+from service_catalog.settings import TIME_ZONE
 from .dates_processing import *
 
 logger = logging.getLogger(__name__)
 
 
-def make_registrations(date_begin, date_end):
+def make_registrations(pub_regularity,date_b, date_e):
 
-    status = 'Under consideration'
+
+    date_begin=str(date_b)
+    date_end=str(date_e)
+
+    status = 'Operational'
 
     command = ''
     command += 'select * from   app1_metric'
@@ -24,8 +33,8 @@ def make_registrations(date_begin, date_end):
     command += ' and   app1_metricvalueregistration.id is Null'
     command += '  and   app1_metric.date_begin<=%s'
     command += '  and   app1_metric.date_end>=%s'
-
-    metrics = Metric.objects.raw(command, [date_begin, date_end, status, status, date_end, date_begin])
+    command += '  and   app1_metric.publ_regularity=%s'
+    metrics = Metric.objects.raw(command, [date_begin, date_end, status, status, date_end, date_begin,pub_regularity])
 
     for metric in metrics:
         try:
@@ -44,22 +53,41 @@ def checkMetrixValueRegistration():
 
     periods = ['week', 'month', 'quartal', 'half_year', 'year']
 
-    if yesterday == first_last_day_of_week(yesterday)['last']:
-        make_registrations(first_last_day_of_week(yesterday)['first'], first_last_day_of_week(yesterday)['last'])
+    yesterday = now - timedelta(days=7)
+    if True or yesterday == first_last_day_of_week(yesterday)['last']:
+        make_registrations('weekly',first_last_day_of_week(yesterday)['first'], first_last_day_of_week(yesterday)['last'])
 
-    elif yesterday == first_last_day_of_month(yesterday)['last']:
-        make_registrations(first_last_day_of_month(yesterday)['first'], first_last_day_of_month(yesterday)['last'])
+    yesterday = first_last_day_of_month(now)['first'] - timedelta(days=1)
+    if True or yesterday == first_last_day_of_month(yesterday)['last'] :
+        make_registrations('monthly',first_last_day_of_month(yesterday)['first'], first_last_day_of_month(yesterday)['last'])
 
-    elif yesterday == first_last_day_of_quartal(yesterday)['last']:
-        make_registrations(first_last_day_of_quartal(yesterday)['first'], first_last_day_of_quartal(yesterday)['last'])
+    yesterday = first_last_day_of_quartal(now)['first'] - timedelta(days=1)
+    print('first_last_day_of_quartal(now)[''first''] ',first_last_day_of_quartal(now)['first'] )
+    print(yesterday,first_last_day_of_quartal(yesterday)['first'] )
+    if True or yesterday == first_last_day_of_quartal(yesterday)['last']:
+        make_registrations('quaterly',first_last_day_of_quartal(yesterday)['first'], first_last_day_of_quartal(yesterday)['last'])
 
-    elif yesterday == first_last_day_of_half_year(yesterday)['last']:
-        make_registrations(first_last_day_of_half_year(yesterday)['first'], first_last_day_of_half_year(yesterday)['last'])
+    yesterday = first_last_day_of_half_year(now)['first'] - timedelta(days=1)
+    if True or yesterday == first_last_day_of_half_year(yesterday)['last']:
+        make_registrations('half-year',first_last_day_of_half_year(yesterday)['first'], first_last_day_of_half_year(yesterday)['last'])
 
-    elif yesterday == first_last_day_of_year(yesterday)['last']:
-        make_registrations(first_last_day_of_year(yesterday)['first'], first_last_day_of_year(yesterday)['last'])
+    yesterday = first_last_day_of_year(now)['first'] - timedelta(days=1)
+    if True or yesterday == first_last_day_of_year(yesterday)['last']:
+        make_registrations('yearly',first_last_day_of_year(yesterday)['first'], first_last_day_of_year(yesterday)['last'])
 
 
 
     current_time = now.strftime("%H:%M:%S")
     print("Metrix check", current_time)
+
+
+
+def sendUserNotification(user_notification):
+    user_notification.status=send_mail(
+        '['+user_notification.type+']'+user_notification.subject,
+        user_notification.text,
+        'noreply@metrix.lifecell.com.ua',
+       user_notification.recipientList.split(','),
+        fail_silently=False,
+    )
+    user_notification.save()
