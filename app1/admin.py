@@ -139,12 +139,17 @@ class MetricValueInline(admin.TabularInline):
     '''
 
     def cant_change_auth(self, request, obj):
-        service = Service.objects.get(id=obj.service_id)
-        username = Staff.objects.get(id=service.owner_id).name
-        current_user1 = request.user.first_name + " " + request.user.last_name
-        current_user2 = request.user.last_name + " " + request.user.first_name
-        if obj and not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
-            return True
+
+        if obj:
+
+            service = Service.objects.get(id=obj.service_id)
+            username = Staff.objects.get(id=service.owner_id).name
+            current_user1 = request.user.first_name + " " + request.user.last_name
+            current_user2 = request.user.last_name + " " + request.user.first_name
+            if not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -227,6 +232,7 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
             extra_context = extra_context or {}
             extra_context['show_save'] = False
+            extra_context['show_delete'] = False
 
         return super(MetricAdmin, self).change_view(request, object_id, extra_context=extra_context)
 
@@ -253,18 +259,19 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
             if isinstance(inline, MetricValueInline):
 
-                service = Service.objects.get(id=obj.service_id)
-                username = Staff.objects.get(id=service.owner_id).name
-                current_user1 = request.user.first_name + " " + request.user.last_name
-                current_user2 = request.user.last_name + " " + request.user.first_name
-                if obj and not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
+                if obj:
+                    service = Service.objects.get(id=obj.service_id)
+                    username = Staff.objects.get(id=service.owner_id).name
+                    current_user1 = request.user.first_name + " " + request.user.last_name
+                    current_user2 = request.user.last_name + " " + request.user.first_name
+                    if not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
 
-                    for form in inline_admin_formset.forms:
+                        for form in inline_admin_formset.forms:
                     # Here we change the fields read only.
-                        form.fields['value'].widget.attrs['readonly'] = True
-                        form.fields['metric'].widget.attrs['readonly'] = True
-                        form.fields['date_begin'].widget.attrs['readonly'] = True
-                        form.fields['date_end'].widget.attrs['readonly'] = True
+                            form.fields['value'].widget.attrs['readonly'] = True
+                            form.fields['metric'].widget.attrs['readonly'] = True
+                            form.fields['date_begin'].widget.attrs['readonly'] = True
+                            form.fields['date_end'].widget.attrs['readonly'] = True
 
             inline_admin_formsets.append(inline_admin_formset)
         return inline_admin_formsets
@@ -381,6 +388,19 @@ class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('date_end',)
     search_fields = ('name',)
     exclude= []
+
+    def get_form(self, request, obj=None, **kwargs):
+
+        try:
+            form = super(MetricValueRegistrationAdmin, self).get_form(request, obj, **kwargs)
+
+            metric_values = MetricValue.objects.filter(metric=obj.metric)
+            form.base_fields['metricValue'].queryset = metric_values
+
+            return form
+
+        except:
+            return super(MetricValueRegistrationAdmin, self).get_form(request, obj, **kwargs)
 
     def __unicode__(self):
         return self.name

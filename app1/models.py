@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from app1.dates_processing import *
+
 
 STATUS_CHOICES = (
     ('Defined', 'Defined'),
@@ -122,7 +122,7 @@ class MetricValue(models.Model):
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT,  blank=False)
     value = models.FloatField(verbose_name="Metric value")
     date_begin = models.DateTimeField()
-    date_end = models.DateTimeField(blank=True)
+    date_end = models.DateTimeField()
 
     history = HistoricalRecords()
     
@@ -218,9 +218,9 @@ class UserNotification(models.Model):
     type = models.CharField(max_length=30, choices=SYSTEM_NOTIFICATION_CHOICES, default='INFO')
     text= models.TextField(verbose_name="Content")
     subject = models.CharField(max_length=100)
-    recipientList=models.CharField(max_length=250,verbose_name="To")
+    recipientList=models.TextField(verbose_name="To")
     history = HistoricalRecords()
-    status = models.FloatField(verbose_name="Delivery status", blank=True, null=True, default=-1)
+    status = models.FloatField(verbose_name="Delivery status", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Created at')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Updated at')
 
