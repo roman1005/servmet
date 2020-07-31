@@ -407,6 +407,7 @@ class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
         return obj.metric.design_id
     get_metric_design_id.short_description = 'Metric Design ID'
 
+    def get_form(self, request, obj=None, **kwargs):
         try:
             form = super(MetricValueRegistrationAdmin, self).get_form(request, obj, **kwargs)
 
