@@ -19,6 +19,10 @@ from django.contrib.admin import helpers
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
+
+
+
+
 @receiver(pre_save, sender=User)
 def set_new_user_staff(sender, instance, **kwargs):
     if instance._state.adding is True:
@@ -215,12 +219,12 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/change_form.html/"
     ordering = ('service__totalorder', 'metric_order', )
-    search_fields = ('metric_name', 'design_id')
+    search_fields = ('metric_name', 'design_id','service__design_id','service__service_name')
     inlines = [
         MetricValueInline
     ]
-    exclude = ['date_begin', 'date_end',]
-    list_display = ('design_id','metric_name','status','date_begin','date_end')
+
+    list_display = ('design_id','metric_name','status','date_begin','date_end','service')
     def change_view(self, request, object_id, extra_context=None):
 
         service = Service.objects.get(id=Metric.objects.get(id=object_id).service_id)
@@ -330,6 +334,14 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
     change_form_template = "admin/edit_inline/metric_values.html/"
+    search_fields=('metric__design_id','metric__service__design_id')
+    list_display = ('get_metric_design_id','date_begin','date_end','value')
+    ordering = ('-date_end','metric__design_id' )
+
+    def get_metric_design_id(self, obj):
+        return obj.metric.design_id
+
+    get_metric_design_id.short_description = 'Metric Design ID'
 
     def get_form(self, request, obj=None, **kwargs):
 
@@ -386,10 +398,14 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
 class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('date_end',)
-    search_fields = ('name',)
+    search_fields = ('metric__metric_name','metric__design_id','date_begin','date_end')
+    list_display = ('get_metric_design_id', 'date_begin','date_end', 'created_at', 'updated_at')
+    readonly_fields = ['date_end']
     exclude= []
 
-    def get_form(self, request, obj=None, **kwargs):
+    def get_metric_design_id(self, obj):
+        return obj.metric.design_id
+    get_metric_design_id.short_description = 'Metric Design ID'
 
         try:
             form = super(MetricValueRegistrationAdmin, self).get_form(request, obj, **kwargs)
