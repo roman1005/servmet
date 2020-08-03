@@ -26,6 +26,7 @@ def set_new_user_staff(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
+    '''after new User is created it is added into the Public group automatically, and if Staff with such name exists - into the ServiceMetricOwner group'''
     if created:
         instance.groups.add(Group.objects.get(name='Public'))
     try:
@@ -40,6 +41,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender = MetricValue)
 def register_measurement(sender, instance, **kwargs):
+    '''After new MetricValue instance is saved metricValue field of corresponding MetricValueRegistration is assigned'''
     if instance.metric.service.status=="Operational":
         mtr_val_reg = MetricValueRegistration.objects.get(metric=instance.metric, date_begin=instance.date_begin, date_end=instance.date_end)
         mtr_val_reg.metricValue = instance
@@ -47,6 +49,8 @@ def register_measurement(sender, instance, **kwargs):
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
+    '''After user is logged in function looks for corresponding Staff.
+     In case he is owner of some Services he remains in group ServiceMetricOwner, else he is removed.'''
     try:
         staff_id = Staff.objects.get(name = user.first_name+" "+user.last_name)
         if Service.objects.filter(owner=staff_id).count() > 0:
@@ -66,7 +70,7 @@ def post_login(sender, user, request, **kwargs):
                 user.groups.remove(Group.objects.get(name='ServiceMetricOwner'))
 
 class RemoveButtons:
-
+    '''This is one of base classes for all model admin classes - it removes save_and_add_another and save_and_continue buttons'''
     submit_row = admin_modify.submit_row
 
     def submit_row_custom(context):
@@ -139,7 +143,7 @@ class MetricValueInline(admin.TabularInline):
     '''
 
     def cant_change_auth(self, request, obj):
-
+        '''This codes determines whether User can change metricValue or not - he can if he is owner of corresponding Service and Metric or if he is superuser.'''
         if obj:
 
             service = Service.objects.get(id=obj.service_id)
@@ -158,6 +162,7 @@ class MetricValueInline(admin.TabularInline):
             request, obj, **kwargs)
 
         class PaginationFormSet(formset_class):
+            '''Pagination for MetricValues as inline of metric'''
             def __init__(self, *args, **kwargs):
                 super(PaginationFormSet, self).__init__(*args, **kwargs)
 
@@ -197,6 +202,7 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     ordering = ('totalorder',)
     exclude = ['totalorder',]
     list_display = ('design_id','service_name','portfolio','sub_portfolio','status')
+
     def response_change(self, request, obj):
         return redirect(request.path)
 
@@ -222,7 +228,7 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     exclude = ['date_begin', 'date_end',]
     list_display = ('design_id','metric_name','status','date_begin','date_end')
     def change_view(self, request, object_id, extra_context=None):
-
+        '''If user is not owner of corresponding Service and Metric save and delete buttons are hidden'''
         service = Service.objects.get(id=Metric.objects.get(id=object_id).service_id)
         username = Staff.objects.get(id=service.owner_id).name
         current_user1 = request.user.first_name + " " + request.user.last_name
@@ -237,6 +243,7 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         return super(MetricAdmin, self).change_view(request, object_id, extra_context=extra_context)
 
     def get_readonly_fields(self, request, obj=None):
+        '''Makes possible to edit Metric only for superusers'''
         if not request.user.is_superuser:  # editing an existing object
             return self.readonly_fields + ('service', 'design_id', 'metric_name', 'description', 'status', 'metric_order', 'publ_regularity', 'publ_deadline', 'measr_regularity', 'nature')
         return self.readonly_fields
@@ -247,6 +254,7 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         return redirect(request.path)
 
     def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+        '''Makes possible to edit MetricValue inlines of Metric only for owner of corresponing Service and for superusers.'''
         inline_admin_formsets = []
         for inline, formset in zip(inline_instances, formsets):
             fieldsets = list(inline.get_fieldsets(request, obj))
@@ -332,7 +340,7 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     change_form_template = "admin/edit_inline/metric_values.html/"
 
     def get_form(self, request, obj=None, **kwargs):
-
+        '''Restricts possible choices of Metrics when adding new MetricValue'''
         try:
             form = super(MetricValueAdmin, self).get_form(request, obj, **kwargs)
             metrics = None
@@ -355,7 +363,7 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         return redirect(request.path)
 
     def change_view(self, request, object_id, extra_context=None):
-
+        'Makes possible to delete and save changes to MetricValue only for corresponding ServiceMetricOwner and for supersusers'
         metric = MetricValue.objects.get(id=object_id).metric
         service = Service.objects.get(id=metric.service_id)
         username = Staff.objects.get(id=service.owner_id).name
@@ -374,7 +382,7 @@ class MetricValueAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
         return redirect(request.path)
 
     def get_readonly_fields(self, request, obj=None):
-
+        'Makes fields of metricValue readonly for everyone except ServiceMetricOwner and superusers'
         if obj:
             metric = Metric.objects.get(id = obj.metric_id)
             service = Service.objects.get(id = metric.service_id)

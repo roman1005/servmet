@@ -5,7 +5,7 @@ def first_last_day_of_month(any_day_of_month):
     '''returns first and last day of month by any day of this month as dictionary'''
     next_month = any_day_of_month.replace(day=28) + timedelta(days=4)
     last_day = next_month - timedelta(days=next_month.day)
-    last_day = last_day.replace(hour = 23, minute = 59, second = 59, microsecond =999999)
+    last_day = last_day.replace(hour = 23, minute = 59, second = 59, microsecond = 999999)
     first_day = last_day.replace(day = 1)
     first_day = first_day.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
 
@@ -14,7 +14,7 @@ def first_last_day_of_month(any_day_of_month):
 def first_last_day_of_week(any_day_of_week):
 
     '''returns first and last day of quartal by any day of this week as dictionary'''
-    last_day = any_day_of_week + timedelta(days=(6 - datetime.now().weekday()))
+    last_day = any_day_of_week + timedelta(days=(6 - any_day_of_week.weekday()))
     last_day = last_day.replace(hour=23, minute=59, second=59, microsecond=999999)
     first_day = last_day - timedelta(days=6)
     first_day = first_day.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -70,3 +70,5 @@ def get_yesterday(today):
     '''returns yesterday 23:59:59 datetime'''
     yesterday = today - timedelta(days=1)
     return yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+print(first_last_day_of_week(datetime.now()))
