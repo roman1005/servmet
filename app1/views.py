@@ -6,6 +6,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 import json
 import base64
+from django.shortcuts import render, redirect
+from django.contrib import auth
+from django.template.context_processors import csrf
+from .models import Service
 # Create your views here.
 
 def basic_auth(request):
@@ -23,6 +27,36 @@ def basic_auth(request):
     if token_type != 'Basic' or not password_valid:
         return HttpResponse(status=401)
     return HttpResponse("Authentification successful")
+
+def index(request):
+    context = {}
+    portfolios = []
+    for serv in Service.objects.all():
+        portfolios.append(serv.portfolio)
+    context['portfolios'] = portfolios
+    return render(request, 'admin/edit_inline/index.html', context)
+
+def login(request):
+
+   context={}
+   context.update(csrf(request))
+   if(request.POST):
+      username=request.POST.get('username','')
+      password=request.POST.get('password','')
+      user=auth.authenticate(username=username,password=password)
+      if user is not None:
+         auth.login(request, user)
+         return redirect('/after_login')
+      else:
+         login_error = "Authentication problem: user is not found."
+         context['login_error'] = login_error
+         return render(request,'admin/edit_inline/login.html/', context)
+   else:
+      return render(request, 'admin/edit_inline/login.html/', context)
+
+def logout(request):
+   auth.logout(request)
+   return redirect('/login')
 
 @api_view(["POST"])
 

@@ -38,5 +38,11 @@ urlpatterns = [
 
     path('api/metric_values/', MetricValueView.as_view()),
 
+    url(r'^logout/$', views.logout, name='logout'),
+
+    path('login/', views.login, name='login'),
+
+    url(r'after_login/',views.index,name='index'),
+
     url(r'', admin.site.urls),
 ]
