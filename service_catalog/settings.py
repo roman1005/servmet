@@ -13,7 +13,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -21,9 +20,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '1wy&m5f^-bq+mhlq+nulrhdu&i0k^reo9#nc608scw!at1c3!!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+MAILER_LIST = ['shahid@trialx.com']
+
+EMAIL_HOST = '2r.ivanets@gmail.com'
+
+EMAIL_HOST_USER = '2r.ivanets@gmail.com'
+
+EMAIL_HOST_PASSWORD = 'r0man2001'
+
+EMAIL_PORT = 587
+
+EMAIL_USE_TLS = True
+
+DEFAULT_FROM_EMAIL = '2r.ivanets@gmail.com'
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 LDAP_AUTH_URL = "ldaps://localhost:10636"
 
@@ -33,7 +46,7 @@ LDAP_AUTH_SEARCH_BASE = "ou=user,o=Company"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    #"django_python3_ldap.auth.LDAPBackend",
+    "django_python3_ldap.auth.LDAPBackend",
 ]
 
 #AUTH_USER_MODEL = 'app1.User'
@@ -51,9 +64,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
 
-    #'django_python3_ldap',
+    'django_python3_ldap',
 ]
-'''
+
 LDAP_AUTH_OBJECT_CLASS = "inetOrgPerson"
 
 LDAP_AUTH_USER_FIELDS = {
@@ -100,21 +113,33 @@ LDAP_AUTH_CONNECT_TIMEOUT = None
 LDAP_AUTH_RECEIVE_TIMEOUT = None
 
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s [%(asctime)s] %(module)s %(message)s'
         },
     },
-    "loggers": {
-        "django_python3_ldap": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
+
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
     },
+
+    'loggers': {
+        'django': {
+            'handlers': ['mail_admins'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+
+    }
+
 }
-'''
+
 
 MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
@@ -201,3 +226,5 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+ADMINS = [('roman', '2r.ivanets@gmail.com')]
