@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_modify import submit_row
 
-from app1.metricsValueRegistrationJob import sendUserNotification
-from app1.models import Service, Staff, Metric, MetricMeasurement, MetricValue, MetricValueRegistration, UserNotification
+
+
+from app1.models import *
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.admin.views.main import ChangeList
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
@@ -17,7 +18,7 @@ from django.db.models.signals import pre_save
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.admin import helpers
 from django.core.exceptions import ObjectDoesNotExist
-from datetime import datetime
+
 
 
 
@@ -190,7 +191,33 @@ class MetricValueInline(admin.TabularInline):
         return PaginationFormSet
 
 #class MetricMeasurementInLine()
+class PortfolioAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
+
+    search_fields = ('name', 'design_id', 'status' )
+    ordering = ('order',)
+
+    list_display = ('design_id','name','status')
+    def response_change(self, request, obj):
+        return redirect(request.path)
+
+    def __unicode__(self):
+        return self.name
+
+
+class SubPortfolioAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
+
+
+    search_fields = ( 'design_id', 'name', 'status','portfolio__name')
+    ordering = ('portfolio__order','order')
+
+    list_display = ( 'design_id', 'name', 'status',)
+
+    def response_change(self, request, obj):
+        return redirect(request.path)
+
+    def __unicode__(self):
+        return self.name
 
 class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     change_form_template = "admin/edit_inline/change_form.html/"
@@ -211,7 +238,15 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 class StaffAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('name',)
     search_fields = ('name',)
-    list_display=('name','phone_number')
+    list_display=('name','phone_number','email')
+    actions=('update_staff_data',)
+
+
+    def update_staff_data(self, request, queryset):
+       short_description = "Update persobal data from Active Directory"
+       for employee in queryset:
+           employee.check_email()
+
     def __unicode__(self):
         return self.name
 
@@ -425,7 +460,7 @@ class MetricValueRegistrationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 class UserNotificationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     ordering = ('created_at',)
     search_fields = ('subject','text','type','recipientList')
-    list_display = ('type', 'subject', 'recipientList','created_at','status')
+    list_display = ('type', 'subject', 'recipientList','created_at','status','attempt')
     exclude= []
     actions = ['send_notification', ]
     readonly_fields = ["status"]
@@ -443,9 +478,16 @@ class UserNotificationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 
            current_time = now.strftime("%H:%M:%S")
            print(current_time, 'sending',str(user_notification))
-           sendUserNotification(user_notification)
+           user_notification.delivery()
+
+class ExternalDataSourceAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    ordering = ('name',)
+    search_fields = ('name','rdbms', 'host', 'schema', )
+    list_display = ('name','rdbms', 'host', 'schema', )
 
 
+admin.site.register(Portfolio, PortfolioAdmin)
+admin.site.register(SubPortfolio, SubPortfolioAdmin)
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Staff, StaffAdmin)
 admin.site.register(Metric, MetricAdmin)
@@ -453,5 +495,6 @@ admin.site.register(MetricMeasurement, SimpleHistoryAdmin)
 admin.site.register(MetricValue, MetricValueAdmin)
 admin.site.register(MetricValueRegistration, MetricValueRegistrationAdmin)
 admin.site.register(UserNotification, UserNotificationAdmin)
+admin.site.register(ExternalDataSource, ExternalDataSourceAdmin)
 
 # Register your models here.

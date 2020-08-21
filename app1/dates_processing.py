@@ -14,7 +14,7 @@ def first_last_day_of_month(any_day_of_month):
 def first_last_day_of_week(any_day_of_week):
 
     '''returns first and last day of quartal by any day of this week as dictionary'''
-    last_day = any_day_of_week + timedelta(days=(6 - datetime.now().weekday()))
+    last_day = any_day_of_week + timedelta(days=(6 - any_day_of_week.weekday()))
     last_day = last_day.replace(hour=23, minute=59, second=59, microsecond=999999)
     first_day = last_day - timedelta(days=6)
     first_day = first_day.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -61,7 +61,7 @@ def first_last_day_of_year(any_day):
     '''returns first and last day of quartal by any day of this year as dictionary'''
 
     last_day = any_day.replace(month=12, day=31, hour=23, minute=59, second=59, microsecond =999999)
-    first_day = any_day.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    first_day = any_day.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
     return {'first': first_day, 'last': last_day}
 
@@ -70,3 +70,8 @@ def get_yesterday(today):
     '''returns yesterday 23:59:59 datetime'''
     yesterday = today - timedelta(days=1)
     return yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+
+
+
+

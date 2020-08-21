@@ -20,6 +20,9 @@ from .api import router
 from app1 import views
 from app1.api_views import StaffView, ServiceView, MetricView, MetricValueView
 
+
+admin.site.site_title = 'Service metrics'
+
 urlpatterns = [
 
     url(r'^admin/', admin.site.urls),

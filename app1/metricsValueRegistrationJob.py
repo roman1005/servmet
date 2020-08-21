@@ -2,12 +2,13 @@ import pytz
 
 from django.core.mail import send_mail
 
-from app1.models import MetricValueRegistration, Metric
+from app1.models import MetricValueRegistration, Metric, ExternalDataSource
 from django.db import IntegrityError
 import logging
 
 from service_catalog.settings import TIME_ZONE
 from .dates_processing import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def make_registrations(pub_regularity,date_b, date_e):
     for metric in metrics:
         try:
             MetricValueRegistration.objects.create(metric=metric, date_begin=date_begin, date_end=date_end)
-            print(MetricValueRegistration.objects.all().count())
+            print(MetricValueRegistration.objects.count())
         except IntegrityError:
             message = 'Attempt to add registration with identical dates and metric to already existing. Metric: " ' + str(metric) + ", measurement dates: " +\
             str(date_begin) + ' - ' + str(date_end)
@@ -50,8 +51,8 @@ def checkMetrixValueRegistration():
     now = datetime.now()
 
     yesterday = get_yesterday(now)
+    make_registrations('daily',yesterday.replace(hour=0, minute=0, second=0, microsecond=0), yesterday )
 
-    periods = ['week', 'month', 'quartal', 'half_year', 'year']
 
     yesterday = now - timedelta(days=7)
     if True or yesterday == first_last_day_of_week(yesterday)['last']:
@@ -62,8 +63,8 @@ def checkMetrixValueRegistration():
         make_registrations('monthly',first_last_day_of_month(yesterday)['first'], first_last_day_of_month(yesterday)['last'])
 
     yesterday = first_last_day_of_quartal(now)['first'] - timedelta(days=1)
-    print('first_last_day_of_quartal(now)[''first''] ',first_last_day_of_quartal(now)['first'] )
-    print(yesterday,first_last_day_of_quartal(yesterday)['first'] )
+
+
     if True or yesterday == first_last_day_of_quartal(yesterday)['last']:
         make_registrations('quaterly',first_last_day_of_quartal(yesterday)['first'], first_last_day_of_quartal(yesterday)['last'])
 
@@ -77,17 +78,10 @@ def checkMetrixValueRegistration():
 
 
 
-    current_time = now.strftime("%H:%M:%S")
-    print("Metrix check", current_time)
+def checkMetrixValueDeadLines():
+    MetricValueRegistration.checkDeadLines()
 
 
-
-def sendUserNotification(user_notification):
-    user_notification.status=send_mail(
-        '['+user_notification.type+']'+user_notification.subject,
-        user_notification.text,
-        'noreply@metrix.lifecell.com.ua',
-       user_notification.recipientList.split(','),
-        fail_silently=False,
-    )
-    user_notification.save()
+def importMetricMeasurement():
+    for source in ExternalDataSource.objects.filter(table__iexact=''):
+        source.importMetricMeasurement

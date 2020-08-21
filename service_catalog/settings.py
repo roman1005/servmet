@@ -56,7 +56,7 @@ INSTALLED_APPS = [
 
     #'django_python3_ldap',
 ]
-'''
+
 LDAP_AUTH_OBJECT_CLASS = "inetOrgPerson"
 
 LDAP_AUTH_USER_FIELDS = {
@@ -117,7 +117,7 @@ LOGGING = {
         },
     },
 }
-'''
+
 
 MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',

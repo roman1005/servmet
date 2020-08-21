@@ -1,9 +1,14 @@
 {% extends "admin/base.html" %}
-
-{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% load static %}
+{% block title %}{{ title }} | {{ site_title|default:_('Service Metrics') }}{% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">Servmet Administration</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Service Metrics Administration</a></h1>
 {% endblock %}
+
+
+ {% block extrahead %}
+        <link rel="icon" href="{% static 'images/favicon.ico' %}" sizes="48x48" />
+    {% endblock %}
 
 {% block nav-global %}{% endblock %}
