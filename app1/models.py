@@ -13,7 +13,7 @@ from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from app1.dates_processing import *
-from app1.ldapSearch import get_ldap_mail
+#from app1.ldapSearch import get_ldap_mail
 from app1.validators import *
 
 STATUS_CHOICES = (
@@ -78,6 +78,7 @@ class Staff(models.Model):
     email = models.EmailField(max_length=100,blank=True, null=True)
 
     history = HistoricalRecords()
+    '''
     def check_email(self):
         if self.email is None or self.email=='':
             name = self.name.split()
@@ -88,7 +89,7 @@ class Staff(models.Model):
             if mail is not None:
                 self.email = mail
                 self.save()
-
+    '''
     def __str__(self):
         return self.name
 
@@ -144,6 +145,11 @@ class Portfolio(models.Model):
     sub_portfolioBlue = models.IntegerField(default=0, validators=[validateRGB], verbose_name='SubPortfolio BLUE(RGB)')
     refCard = models.URLField(null=True, blank=True, verbose_name='Link to RefCard')
     history = HistoricalRecords()
+
+    def __str__(self):
+        return self.name
+
+
 class SubPortfolio(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     design_id = models.IntegerField(unique=True)
@@ -155,6 +161,11 @@ class SubPortfolio(models.Model):
     refCard = models.URLField(null=True, blank=True, verbose_name='Link to RefCard')
 
     history = HistoricalRecords()
+
+    def __str__(self):
+        return self.name
+
+
 class Service(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

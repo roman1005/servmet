@@ -1,3 +1,4 @@
+'''
 from ldap3 import *
 from ldap3.utils.log import set_library_log_detail_level, EXTENDED
 
@@ -41,3 +42,4 @@ def ldap_search(firstName,lastName):
                attributes=ALL_ATTRIBUTES,
                get_operational_attributes=True)
     return con.entries
+'''

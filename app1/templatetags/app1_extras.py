@@ -1,5 +1,5 @@
 from django import template
-from app1.models import Metric, MetricValue
+from app1.models import SubPortfolio, Service, Metric, MetricValue
 
 
 register = template.Library()
@@ -10,7 +10,11 @@ def get_metric_link(original, request):
 
 @register.simple_tag
 def get_link(object, request):
-    if type(object) is Metric:
+    if type(object) is SubPortfolio:
+        return request.build_absolute_uri('/admin/app1/subportfolio/') + str(object.id) + "/change"
+    elif type(object) is Service:
+        return request.build_absolute_uri('/admin/app1/service/') + str(object.id) + "/change"
+    elif type(object) is Metric:
         return request.build_absolute_uri('/admin/app1/metric/') + str(object.id) + "/change"
     elif type(object) is MetricValue:
         return request.build_absolute_uri('/admin/app1/metricvalue/') + str(object.id) + "/change"
@@ -19,6 +23,16 @@ def get_link(object, request):
 def get_service_link(original, request):
   id = original.service_id
   return request.build_absolute_uri('/admin/app1/service/') + str(id) + "/change"
+
+@register.simple_tag
+def get_subport_link(original, request):
+    id = original.subportfolio_id
+    return request.build_absolute_uri('/admin/app1/subportfolio/') + str(id) + "/change"
+
+@register.simple_tag
+def get_port_link(original, request):
+    id = original.portfolio_id
+    return request.build_absolute_uri('/admin/app1/portfolio/') + str(id) + "/change"
 
 @register.simple_tag
 def get_admin_link(request):

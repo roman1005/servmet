@@ -56,6 +56,7 @@ def register_measurement(sender, instance, **kwargs):
 def post_login(sender, user, request, **kwargs):
     '''After user is logged in function looks for corresponding Staff.
      In case he is owner of some Services he remains in group ServiceMetricOwner, else he is removed.'''
+
     try:
         staff_id = Staff.objects.get(name = user.first_name+" "+user.last_name)
         if Service.objects.filter(owner=staff_id).count() > 0:
@@ -98,14 +99,26 @@ class InlineChangeList(object):
         self.result_count = paginator.count
         self.params = dict(request.GET.items())
 
+class SubportfolioInLine(admin.options.InlineModelAdmin):
+    template = "admin/edit_inline/portfolios.html"
+    model = SubPortfolio
+    extra = 0
+    fields = ["name"]
+    readonly_fields = ["name"]
+    ordering = ('order',)
+    max_num = 0
 
-class LinkedInline(admin.options.InlineModelAdmin):
+class ServiceInLine(admin.options.InlineModelAdmin):
+    template = "admin/edit_inline/subportfolios.html"
+    model = Service
+    extra = 0
+    fields = ["service_name"]
+    readonly_fields = ["service_name"]
+    ordering = ('totalorder',)
+    max_num = 0
+
+class MetricInline(admin.options.InlineModelAdmin):
     template = "admin/edit_inline/services.html"
-
-
-
-
-class MetricInline(LinkedInline):
     model = Metric
     extra = 0
     fields = ["metric_name"]
@@ -152,7 +165,10 @@ class MetricValueInline(admin.TabularInline):
         if obj:
 
             service = Service.objects.get(id=obj.service_id)
-            username = Staff.objects.get(id=service.owner_id).name
+            try:
+                username = Staff.objects.get(id=service.owner_id).name
+            except Staff.DoesNotExist:
+                username = ""
             current_user1 = request.user.first_name + " " + request.user.last_name
             current_user2 = request.user.last_name + " " + request.user.first_name
             if not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
@@ -198,6 +214,7 @@ class MetricValueInline(admin.TabularInline):
 #class MetricMeasurementInLine()
 class PortfolioAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
+    inlines = [SubportfolioInLine]
 
     search_fields = ('name', 'design_id', 'status' )
     ordering = ('order',)
@@ -212,11 +229,13 @@ class PortfolioAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
 class SubPortfolioAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
-
+    template = "admin/edit_inline/change_form.html"
     search_fields = ( 'design_id', 'name', 'status','portfolio__name')
     ordering = ('portfolio__order','order')
 
     list_display = ( 'design_id', 'name', 'status',)
+
+    inlines = [ServiceInLine,]
 
     def response_change(self, request, obj):
         return redirect(request.path)
@@ -269,7 +288,10 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     def change_view(self, request, object_id, extra_context=None):
         '''If user is not owner of corresponding Service and Metric save and delete buttons are hidden'''
         service = Service.objects.get(id=Metric.objects.get(id=object_id).service_id)
-        username = Staff.objects.get(id=service.owner_id).name
+        try:
+            username = Staff.objects.get(id=service.owner_id).name
+        except Staff.DoesNotExist:
+            username = ""
         current_user1 = request.user.first_name + " " + request.user.last_name
         current_user2 = request.user.last_name + " " + request.user.first_name
 
@@ -308,7 +330,10 @@ class MetricAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
 
                 if obj:
                     service = Service.objects.get(id=obj.service_id)
-                    username = Staff.objects.get(id=service.owner_id).name
+                    try:
+                        username = Staff.objects.get(id=service.owner_id).name
+                    except Staff.DoesNotExist:
+                        username = ""
                     current_user1 = request.user.first_name + " " + request.user.last_name
                     current_user2 = request.user.last_name + " " + request.user.first_name
                     if not (current_user1 == username or current_user2 == username) and not request.user.is_superuser:
