@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from . import models
-from . import serializers
-from .serializers import StaffSerializer,ServiceSerializer, MetricSerializer, MetricValueSerializer
+
+from .serializers import *
 from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime as dt
 from django.db import IntegrityError
-from simple_history.models import HistoricalRecords
+
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 
@@ -35,6 +35,34 @@ class StaffView(APIView):
         response= Response({"staff": serializer.data})
         return response
 
+class PortfolioView(APIView):
+
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.view_portfolio') and not user.is_superuser:
+            raise PermissionDenied()
+
+        portfolio = Portfolio.objects.all().order_by('order')
+        # the many param informs the serializer that it will be serializing more than a single article.
+        serializer = PortfolioSerializer(portfolio, many=True)
+
+        response = Response({"portfolios": serializer.data})
+        return response
+class SubPortfolioView(APIView):
+
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+
+        if not user.has_perm('app1.view_subportfolio') and not user.is_superuser:
+            raise PermissionDenied()
+
+        sub_portfolio = SubPortfolio.objects.all().order_by('portfolio__order','order')
+        # the many param informs the serializer that it will be serializing more than a single article.
+        serializer = SubPortfolioSerializer(sub_portfolio, many=True)
+
+        response = Response({"subportfolios": serializer.data})
+        return response
 
 class ServiceView(APIView):
 
@@ -44,7 +72,7 @@ class ServiceView(APIView):
         if not user.has_perm('app1.view_service'):
             raise PermissionDenied()
 
-        service = models.Service.objects.all()
+        service = Service.objects.all()
         # the many param informs the serializer that it will be serializing more than a single article.
         serializer = ServiceSerializer(service, many=True)
 
@@ -247,8 +275,8 @@ class MetricValueView(APIView):
 
 
 class ServiceViewset(viewsets.ModelViewSet):
-    queryset = models.Service.objects.all()
-    serializer_class = serializers.ServiceSerializer
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
 
 
 

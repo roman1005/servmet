@@ -13,7 +13,7 @@ from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from app1.dates_processing import *
-#from app1.ldapSearch import get_ldap_mail
+from app1.ldapSearch import get_ldap_mail
 from app1.validators import *
 
 STATUS_CHOICES = (
@@ -78,7 +78,6 @@ class Staff(models.Model):
     email = models.EmailField(max_length=100,blank=True, null=True)
 
     history = HistoricalRecords()
-    '''
     def check_email(self):
         if self.email is None or self.email=='':
             name = self.name.split()
@@ -89,7 +88,7 @@ class Staff(models.Model):
             if mail is not None:
                 self.email = mail
                 self.save()
-    '''
+
     def __str__(self):
         return self.name
 
@@ -163,7 +162,7 @@ class SubPortfolio(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.name
+        return self.name + '[' + str(self.design_id) + "] { " + self.portfolio.name+ " }"
 
 
 class Service(models.Model):
@@ -171,8 +170,7 @@ class Service(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     design_id = models.IntegerField(unique=True)
     service_name = models.CharField(unique=True, max_length=200)
-    portfolio = models.CharField(max_length=250)
-    sub_portfolio = models.CharField(max_length=250)
+
     subportfolio = models.ForeignKey(SubPortfolio, on_delete=models.PROTECT, related_name='subPortfolio', blank=True,
                                      null=True)
     customer = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='customerID',blank=True, null=True)
@@ -218,7 +216,7 @@ class Service(models.Model):
 
         #checkProdMetrix
     def __str__(self):
-        return self.service_name +'[' +str(self.design_id)+"] { " + self.portfolio + " -> " + self.sub_portfolio + " }"
+        return self.service_name +'[' +str(self.design_id)+"] { " + self.subportfolio.portfolio.name + " -> " + self.subportfolio.name + " }"
 
     def issueServiceOwnerNotification(self, template: str):
 
@@ -228,11 +226,11 @@ class Service(models.Model):
         if template == 'InProd':
             subject += ' in operational status'
             text = 'Dear Service Owner! \n\n Please be informed that service ' + self.__str__() + '\n changed its status to operational.\n\n'
-            text = text + 'Please visit https://metrix.com/admin/app1/service/' + str(self.id)
+            text = text + 'Please visit https://metrix.lifecell.com.ua/admin/app1/service/' + str(self.id)
         if template == 'OutProd':
             subject += ' in non-operational status'
             text = 'Dear Service Owner! \n\n Please be informed that service' + self.__str__() + ' changed its status from operational.\n\n'
-            text = text + 'Please visit https://metrix.com/admin/app1/service/' + str(self.id)
+            text = text + 'Please visit https://metrix.lifecell.com.ua/admin/app1/service/' + str(self.id)
 
         notification = UserNotification.objects.create(subject=subject, recipientList=serviceOwner.email, text=text)
         notification.save()
@@ -352,7 +350,7 @@ class Metric(models.Model):
             text += '\ndelay from the end of a period,hours--' + str(self._loaded_values['sql_extraction_delay'])
             text += '\nextraction time slot--from ' + self._loaded_values['time_slot_begin'].strftime(
                 "%H:%M:%S.%f") + ' till ' + self._loaded_values['time_slot_end'].strftime("%H:%M:%S.%f")
-        text = text + '\nPlease visit https://metrix.com/admin/app1/metric/' + str(self.id)
+        text = text + '\nPlease visit https://metrix.lifecell.com.ua/admin/app1/metric/' + str(self.id)
         notification = UserNotification.objects.create(subject=subject,
                                                        recipientList=sourceOwner_mail + ',' + serviceOwner.email,
                                                        text=text)
@@ -372,7 +370,7 @@ class Metric(models.Model):
                 subject += ' is non-operational'
                 text += '\n changed its status from operational.\n'
 
-            text = text + 'Please visit https://metrix.com/admin/app1/metric/' + str(self.id)
+            text = text + 'Please visit https://metrix.lifecell.com.ua/admin/app1/metric/' + str(self.id)
             notification = UserNotification.objects.create(subject=subject, recipientList=serviceOwner.email, text=text)
             notification.save()
 
@@ -455,7 +453,7 @@ class MetricValue(models.Model):
         else:
             super(MetricValue, self).save(*args, **kwargs)
     '''
-
+    #TODO clean link to registration during deletion
 
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
@@ -562,7 +560,7 @@ class UserNotification(models.Model):
             self.status = send_mail(
                 '[' + self.type + ']' + self.subject,
                 self.text,
-                'noreply@metrix.com',
+                'noreply@metrix.lifecell.com.ua',
                 self.recipientList.split(','),
                 fail_silently=True
             )

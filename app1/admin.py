@@ -248,16 +248,19 @@ class ServiceAdmin(SimpleHistoryAdmin, admin.ModelAdmin, RemoveButtons):
     inlines = [
         MetricInline,
     ]
-    search_fields = ('service_name', 'design_id', 'owner__name', 'portfolio', 'sub_portfolio','status' )
+    search_fields = ('service_name', 'design_id', 'owner__name', 'subportfolio__portfolio__name', 'subportfolio__name','status' )
     ordering = ('totalorder',)
     exclude = ['totalorder',]
-    list_display = ('design_id','service_name','portfolio','sub_portfolio','status')
-
+    list_display = ('design_id','service_name','getPortfolioName','getSubportfolioName','status')
     def response_change(self, request, obj):
         return redirect(request.path)
 
     def __unicode__(self):
         return self.totalorder
+    def  getSubportfolioName (self,obj: Service):
+        return obj.subportfolio.name
+    def  getPortfolioName (self,obj: Service):
+        return obj.subportfolio.portfolio.name
 
 
 class StaffAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
