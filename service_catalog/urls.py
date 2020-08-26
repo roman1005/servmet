@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.contrib import admin
 from .api import router
 from app1 import views
-from app1.api_views import StaffView, ServiceView, MetricView, MetricValueView
+from app1.api_views import *
 
 
 admin.site.site_title = 'Service metrics'
@@ -32,6 +32,10 @@ urlpatterns = [
     path(r'api/v1/', include(router.urls)),
 
     path('staff/', StaffView.as_view()),
+
+    path('api/portfolios/', PortfolioView.as_view()),
+
+    path('api/subportfolios/', SubPortfolioView.as_view()),
 
     path('api/services/', ServiceView.as_view()),
 

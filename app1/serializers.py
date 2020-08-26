@@ -1,15 +1,27 @@
 from rest_framework import serializers
-from app1.models import Service, Staff, Metric, MetricValue, MetricValueRegistration
+from app1.models import *
 
 class StaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
 
+class PortfolioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Portfolio
+        exclude = []
+        depth = 1
+
+
+class SubPortfolioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubPortfolio
+        exclude = []
+        depth = 2
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         exclude = []
-        depth = 1
+        depth = 3
 
     def update(self, instance, validated_data):
         instance.service_name = validated_data.get('service_name', instance.service_name)
