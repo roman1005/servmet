@@ -1,21 +1,36 @@
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
+
 from app1.models import *
 
 class StaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
 
+
+
+
+class SubPortfolioSetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubPortfolio
+        exclude = []
+
+
 class PortfolioSerializer(serializers.ModelSerializer):
+    subportfolio_set = SubPortfolioSetSerializer(many=True)
     class Meta:
         model = Portfolio
         exclude = []
         depth = 1
 
 
-class SubPortfolioSerializer(serializers.ModelSerializer):
+class ServiceSetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SubPortfolio
+        model = Service
         exclude = []
-        depth = 2
+        depth = 0
+
+
+
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,6 +48,16 @@ class ServiceSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class SubPortfolioSerializer(serializers.ModelSerializer):
+    services= SerializerMethodField()
+    class Meta:
+        model = SubPortfolio
+        exclude = []
+        depth = 3
+    def get_services(self, obj: SubPortfolio):
+        services=Service.objects.filter(subportfolio_id=obj.id)
+        serializer=ServiceSetSerializer(services,many=True)
+        return serializer.data
 
 class MetricSerializer(serializers.ModelSerializer):
     class Meta:
