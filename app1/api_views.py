@@ -1,13 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from . import models
-
+from rest_framework_jwt.serializers import VerifyJSONWebTokenSerializer
 from .serializers import *
 from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
-from .models import Staff, Service, Metric, MetricValue
+from .models import Portfolio, SubPortfolio, Staff, Service, Metric, MetricValue
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -15,10 +15,28 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime as dt
 from django.db import IntegrityError
+from rest_framework import viewsets
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 
+class ReadOnly(BasePermission):
+
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in SAFE_METHODS:
+            return True
+'''
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    Provides basic CRUD functions for the User model
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (ReadOnly, )
+'''
 class StaffView(APIView):
 
     def get(self, request):
@@ -38,9 +56,20 @@ class StaffView(APIView):
 class PortfolioView(APIView):
 
     def get(self, request):
-        user = User.objects.get(username=request.user)
-
-        if not user.has_perm('app1.view_portfolio') and not user.is_superuser:
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                # print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
+        if not user.has_perm('app1.view_service'):
             raise PermissionDenied()
 
         portfolio = Portfolio.objects.all().order_by('order')
@@ -48,13 +77,27 @@ class PortfolioView(APIView):
         serializer = PortfolioSerializer(portfolio, many=True)
 
         response = Response({"portfolios": serializer.data})
+
         return response
+
+
 class SubPortfolioView(APIView):
 
     def get(self, request):
-        user = User.objects.get(username=request.user)
-
-        if not user.has_perm('app1.view_subportfolio') and not user.is_superuser:
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                # print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
+        if not user.has_perm('app1.view_service'):
             raise PermissionDenied()
 
         sub_portfolio = SubPortfolio.objects.all().order_by('portfolio__order','order')
@@ -63,17 +106,55 @@ class SubPortfolioView(APIView):
 
         response = Response({"subportfolios": serializer.data})
         return response
+'''
+class SubPortService(APIView):
 
+    def get(self, request, subportfolio):
+        
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                #print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
+
+        subport_id = SubPortfolio.objects.get(name=subportfolio).id
+        services = Service.objects.filter(subportfolio_id=subport_id)
+        serializer = ServiceSerializer(services, many=True)
+
+        response = Response({"services": serializer.data})
+        return response
+'''
 class ServiceView(APIView):
 
     def get(self, request):
-        user = User.objects.get(username=request.user)
-
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                #print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
         if not user.has_perm('app1.view_service'):
             raise PermissionDenied()
 
-        service = Service.objects.all()
+        #subport_id = SubPortfolio.objects.get(name="Basic TelCo").id
+        #service = Service.objects.filter(subportfolio_id = subport_id)
         # the many param informs the serializer that it will be serializing more than a single article.
+        service = Service.objects.all()
         serializer = ServiceSerializer(service, many=True)
 
         response = Response({"services": serializer.data})

@@ -19,7 +19,8 @@ from django.contrib import admin
 from .api import router
 from app1 import views
 from app1.api_views import *
-
+from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
+from rest_framework.authtoken.views import ObtainAuthToken
 
 admin.site.site_title = 'Service metrics'
 
@@ -41,9 +42,19 @@ urlpatterns = [
 
     path('api/services/<uuid:pk>/', ServiceView.as_view()),
 
+    #path('api/services/<str:subportfolio>', SubPortService.as_view()),
+
     path('api/metrics/', MetricView.as_view()),
 
     path('api/metric_values/', MetricValueView.as_view()),
 
     url(r'', admin.site.urls),
+
+    path(r'api-token-auth/', obtain_jwt_token),
+
+    path(r'api-token-refresh/', refresh_jwt_token),
+
+    path(r'auth/', ObtainAuthToken.as_view())
+
+
 ]

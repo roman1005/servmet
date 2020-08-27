@@ -3,9 +3,14 @@ from rest_framework.fields import SerializerMethodField
 
 from app1.models import *
 
+'''
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username')
+'''
 class StaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
-
 
 
 
@@ -29,14 +34,12 @@ class ServiceSetSerializer(serializers.ModelSerializer):
         exclude = []
         depth = 0
 
-
-
-
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
+        #fields = ('service_name',)
         exclude = []
-        depth = 3
+        depth = 0
 
     def update(self, instance, validated_data):
         instance.service_name = validated_data.get('service_name', instance.service_name)
