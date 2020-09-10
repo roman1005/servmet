@@ -28,15 +28,19 @@ class ReadOnly(BasePermission):
         # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in SAFE_METHODS:
             return True
-'''
-class UserViewSet(viewsets.ModelViewSet):
+
+class UserViewSet(APIView):
     """
     Provides basic CRUD functions for the User model
     """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (ReadOnly, )
-'''
+    permission_classes = (ReadOnly,)
+    def get(self, reqest):
+        queryset = User.objects.all()
+        users = UserSerializer(queryset, many=True)
+        response = Response({"users": users.data})
+        return response
+
+
 class StaffView(APIView):
 
     def get(self, request):
@@ -106,7 +110,7 @@ class SubPortfolioView(APIView):
 
         response = Response({"subportfolios": serializer.data})
         return response
-'''
+
 class SubPortService(APIView):
 
     def get(self, request, subportfolio):
@@ -131,7 +135,60 @@ class SubPortService(APIView):
 
         response = Response({"services": serializer.data})
         return response
+
 '''
+class SubPortService(APIView):
+
+    def get(self, request, subportfolio):
+
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                # print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
+
+        subport_id = SubPortfolio.objects.get(name=subportfolio).id
+        services = Service.objects.filter(subportfolio_id=subport_id)
+        serializer = ServiceSerializer(services, many=True)
+
+        response = Response({"services": serializer.data})
+        return response
+'''
+
+class PortSubPort(APIView):
+
+    def get(self, request, portfolio):
+
+        if request.user.id is not None:
+            user = User.objects.get(username=request.user)
+        elif 'token' in request.query_params.keys():
+            try:
+                data = {'token': request.query_params['token']}
+                valid_data = VerifyJSONWebTokenSerializer().validate(data)
+                user = valid_data['user']
+                request.user = user
+            except ValidationError as v:
+                return HttpResponse('Failed to authorize the user.')
+                # print("validation error", v)
+        else:
+            return HttpResponse('Failed to authorize the user.')
+
+        port_id = Portfolio.objects.get(name=portfolio).id
+        services = SubPortfolio.objects.filter(portfolio_id=port_id)
+        serializer = SubPortfolioSerializer(services, many=True)
+
+        response = Response({"subportfolios": serializer.data})
+        return response
+
+
 class ServiceView(APIView):
 
     def get(self, request):

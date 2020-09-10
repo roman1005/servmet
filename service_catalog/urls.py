@@ -36,17 +36,21 @@ urlpatterns = [
 
     path('api/portfolios/', PortfolioView.as_view()),
 
+    path('api/subportfolios/<str:portfolio>', PortSubPort.as_view()),
+
     path('api/subportfolios/', SubPortfolioView.as_view()),
 
     path('api/services/', ServiceView.as_view()),
 
-    path('api/services/<uuid:pk>/', ServiceView.as_view()),
+    path('api/services/<str:subportfolio>', SubPortService.as_view()),
 
-    #path('api/services/<str:subportfolio>', SubPortService.as_view()),
+    path('api/services/<uuid:pk>/', ServiceView.as_view()),
 
     path('api/metrics/', MetricView.as_view()),
 
     path('api/metric_values/', MetricValueView.as_view()),
+
+    path('api/users/', UserViewSet.as_view()),
 
     url(r'', admin.site.urls),
 

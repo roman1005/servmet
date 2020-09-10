@@ -4,11 +4,16 @@ from rest_framework.fields import SerializerMethodField
 from app1.models import *
 
 '''
+class MakeActive:
+    def set_active(self, foo):
+        return False
+'''
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username')
-'''
+
 class StaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
 
@@ -21,11 +26,12 @@ class SubPortfolioSetSerializer(serializers.ModelSerializer):
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
-    subportfolio_set = SubPortfolioSetSerializer(many=True)
+    #subportfolio_set = SubPortfolioSetSerializer(many=True)
+    #active = serializers.SerializerMethodField('set_active')
     class Meta:
         model = Portfolio
         exclude = []
-        depth = 1
+        depth = 0
 
 
 class ServiceSetSerializer(serializers.ModelSerializer):
@@ -35,12 +41,16 @@ class ServiceSetSerializer(serializers.ModelSerializer):
         depth = 0
 
 class ServiceSerializer(serializers.ModelSerializer):
+
+    #active = serializers.SerializerMethodField('set_active')
+    #current = serializers.SerializerMethodField('set_active')
     class Meta:
         model = Service
         #fields = ('service_name',)
         exclude = []
         depth = 0
 
+    '''
     def update(self, instance, validated_data):
         instance.service_name = validated_data.get('service_name', instance.service_name)
         instance.portfolio = validated_data.get('portfolio', instance.portfolio)
@@ -50,13 +60,17 @@ class ServiceSerializer(serializers.ModelSerializer):
         instance.owner = validated_data.get('owner', instance.owner)
         instance.save()
         return instance
+    '''
 
 class SubPortfolioSerializer(serializers.ModelSerializer):
-    services= SerializerMethodField()
+    #services= SerializerMethodField()
+    #active = serializers.SerializerMethodField('set_active')
+
     class Meta:
         model = SubPortfolio
         exclude = []
-        depth = 3
+        depth = 0
+
     def get_services(self, obj: SubPortfolio):
         services=Service.objects.filter(subportfolio_id=obj.id)
         serializer=ServiceSetSerializer(services,many=True)

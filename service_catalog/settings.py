@@ -73,7 +73,7 @@ REST_FRAMEWORK = {
 
 JWT_AUTH = {
     'JWT_ALLOW_REFRESH': True,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=600),
 }
 
 LDAP_AUTH_OBJECT_CLASS = "inetOrgPerson"
@@ -183,6 +183,7 @@ DATABASES = {
         'PASSWORD': '322223af09',
         'HOST': '63.250.59.170',
         'PORT': '3306',
+        'CONN_MAX_AGE': 10800,
     }
 }
 
