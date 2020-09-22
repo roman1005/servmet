@@ -521,6 +521,12 @@ class ExternalDataSourceAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     search_fields = ('name','rdbms', 'host', 'schema', )
     list_display = ('name','rdbms', 'host', 'schema', )
 
+class MetricValueRequestAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    ordering = ('-date_insert',)
+    search_fields = ('external_data_source__name','rdbms', 'metric_design_id')
+    list_display = ('metric_design_id','metric_val', 'date_begin', 'date_end', )
+
+
 
 admin.site.register(Portfolio, PortfolioAdmin)
 admin.site.register(SubPortfolio, SubPortfolioAdmin)
@@ -532,5 +538,6 @@ admin.site.register(MetricValue, MetricValueAdmin)
 admin.site.register(MetricValueRegistration, MetricValueRegistrationAdmin)
 admin.site.register(UserNotification, UserNotificationAdmin)
 admin.site.register(ExternalDataSource, ExternalDataSourceAdmin)
+admin.site.register(MetticValueRequest, MetricValueRequestAdmin)
 
 # Register your models here.

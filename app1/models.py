@@ -13,7 +13,7 @@ from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from app1.dates_processing import *
-#from app1.ldapSearch import get_ldap_mail
+from app1.ldapSearch import get_ldap_mail
 from app1.validators import *
 
 STATUS_CHOICES = (
@@ -78,7 +78,6 @@ class Staff(models.Model):
     email = models.EmailField(max_length=100,blank=True, null=True)
 
     history = HistoricalRecords()
-    '''
     def check_email(self):
         if self.email is None or self.email=='':
             name = self.name.split()
@@ -89,7 +88,6 @@ class Staff(models.Model):
             if mail is not None:
                 self.email = mail
                 self.save()
-    '''
 
     def __str__(self):
         return self.name
@@ -185,6 +183,7 @@ class Service(models.Model):
     alerts_on = models.BooleanField(default=True, blank=True, null=True, verbose_name='Alerts on')
     refCard = models.URLField(null=True, blank=True, verbose_name='Link to RefCard')
     architecture = models.URLField(null=True, blank=True, verbose_name='Architecture')
+    dashboard_link = models.TextField(blank=True,null=True, verbose_name='link to the dashboard of the service' )
     _isNew = True
     @classmethod
     def from_db(cls, db, field_names, values):
@@ -320,7 +319,7 @@ class Metric(models.Model):
                         else:
                             self.issueMetricCheckNotification('OutProd')
     def __str__(self):
-        return  str(self.metric_name)+'['+str(self.design_id)+']'
+        return  '['+str(self.design_id)+']'+str(self.metric_name)
 
     def issueMetricCheckNotification(self, template: str):
         serviceOwner = Staff.objects.get(pk=self.service.owner.id)
@@ -376,17 +375,7 @@ class Metric(models.Model):
             notification = UserNotification.objects.create(subject=subject, recipientList=serviceOwner.email, text=text)
             notification.save()
 
-class MetricMeasurement(models.Model):
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    metric = models.ForeignKey(Metric, on_delete=models.PROTECT, null=False)
-    date_begin = models.DateTimeField()
-    date_end = models.DateTimeField()
-    timestamp = models.DateTimeField()
-    measurement = models.FloatField()
-    dataSource = models.ForeignKey(ExternalDataSource, on_delete=models.PROTECT, null=True)
-    flg_valid = models.BooleanField(default=False)
-    history = HistoricalRecords()
 
 class MetricValue(models.Model):
 
@@ -418,23 +407,24 @@ class MetricValue(models.Model):
         else: raise ValidationError("Unsupported publication regularity:<"+self.metric.publ_regularity+'>.')
         self.date_begin=period["first"]
         self.date_end=period["last"]
-        if self.metric.service.status=='Operational': #validation only for services in operational state
-            numb = MetricValueRegistration.objects.filter(metric=self.metric).count()
+        if self.metric.service.status=='Operational' and self.metric.status=='Operational': #validation only for services in operational state
+            numb = MetricValueRegistration.objects.filter(metric=self.metric,
+                                                                           date_begin=self.date_begin,
+                                                                           date_end=self.date_end).count()#it can be either 0 or 1 because of unique_together
             if numb == 0 :
-                raise ValidationError("Measurement of metric value for this metric isn't scheduled")
-            else:
-                if MetricValueRegistration.objects.filter(metric=self.metric,
-                                                                           date_begin=self.date_begin,
-                                                                           date_end=self.date_end).count() == 1: #it can be either 0 or 1 because of unique_together
-                   registration = MetricValueRegistration.objects.get(metric=self.metric,
-                                                                           date_begin=self.date_begin,
-                                                                           date_end=self.date_end)
-                   if registration.metricValue is not None:
-                       raise ValidationError("Measurement of metric value for this metric on these datetimes have already been done")
-                else:
-                    raise ValidationError("Measurement of metric value for this metric on these datetimes isn't scheduled")
+                raise ValidationError("Saving Metric Value with scuh attributtes isn't expected. ")
 
-        #super(MetricValue, self).save(*args, **kwargs)
+    def delete(self):
+        #broke link from MetricValueRegistration vefor delition
+        for metric_val_registration in MetricValueRegistration.objects.filter(metricValue__id=self.id):
+            metric_val_registration.metricValue_id=""
+            metric_val_registration.save()
+        super(MetricValue, self).delete()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(MetricValue, self).save(*args, **kwargs)
+
     '''
     def save(self, *args, **kwargs):
         # get number of items that have an overlapping start date
@@ -455,12 +445,25 @@ class MetricValue(models.Model):
         else:
             super(MetricValue, self).save(*args, **kwargs)
     '''
-    #TODO clean link to registration during deletion
+
 
     def __str__(self):
         design_id = Metric.objects.get(id=self.metric_id).design_id
         return str(design_id) + "--" + str(self.date_begin) + " - " + str(self.date_end) + " {" + str(self.value) + "}"
 
+
+class MetricMeasurement(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    metric = models.ForeignKey(Metric, on_delete=models.PROTECT, null=False)
+    date_begin = models.DateTimeField()
+    date_end = models.DateTimeField()
+    timestamp = models.DateTimeField()
+    measurement = models.FloatField()
+    dataSource = models.ForeignKey(ExternalDataSource, on_delete=models.PROTECT, null=True)
+    flg_valid = models.BooleanField(default=False)
+    history = HistoricalRecords()
+    metricValue=models.ForeignKey(MetricValue,blank=True,null=True,on_delete=models.PROTECT)
 
 class MetricValueRegistration (models.Model):
     class Meta:
@@ -471,7 +474,7 @@ class MetricValueRegistration (models.Model):
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
     date_begin = models.DateTimeField()
     date_end = models.DateTimeField()
-    metricValue = models.ForeignKey (MetricValue, on_delete=models.PROTECT, blank=True, null=True)
+    metricValue = models.ForeignKey (MetricValue, on_delete=models.SET_NULL, blank=True, null=True)
     history = HistoricalRecords()
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Created at')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Updated at')
@@ -568,3 +571,18 @@ class UserNotification(models.Model):
             )
 
             self.save()
+class MetticValueRequest (models.Model):
+    class Meta:
+        verbose_name = "Extracted Metric Measurement Request"
+        unique_together = ('metric_design_id', 'date_begin')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    metric_design_id=models.IntegerField(verbose_name="Metric Design ID")
+    metric_val=models.FloatField(verbose_name="Metric value")
+    date_begin = models.DateTimeField()
+    date_end = models.DateTimeField()
+    date_insert =models.DateTimeField()
+
+    metric_measurement = models.ForeignKey(MetricMeasurement, null=True, blank=True, on_delete=models.PROTECT,default='')
+    external_data_source = models.ForeignKey(ExternalDataSource, null=True, blank=True, on_delete=models.PROTECT,
+                                          default='')

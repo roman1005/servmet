@@ -82,6 +82,17 @@ def checkMetrixValueDeadLines():
     MetricValueRegistration.checkDeadLines()
 
 
-def importMetricMeasurement():
-    for source in ExternalDataSource.objects.filter(table__iexact=''):
-        source.importMetricMeasurement
+
+
+def extractMetricValues():
+    #select datasources that has Table
+    currentDateTime=datetime.now()
+    startOfCurrentDay=first_last_day_of_day(currentDateTime)['first']
+    sourceSet=ExternalDataSource.objects.filter(lastExtraction__lt=startOfCurrentDay)
+    for source in sourceSet:
+        currentDateTime = datetime.now()
+        allowed_start_datetime=datetime.combine(startOfCurrentDay,source.time_slot_begin)
+        allowed_end_datetime = datetime.combine(startOfCurrentDay, source.time_slot_end)
+        if currentDateTime>=allowed_start_datetime and currentDateTime<allowed_end_datetime and source.table!='':
+            extractDataFromExternalDataSource(source)
+
